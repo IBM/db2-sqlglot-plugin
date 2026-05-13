@@ -1,0 +1,33 @@
+[build-system]
+requires = ["setuptools>=45", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "db2-sqlglot-dialect"
+version = "1.0.0"
+description = "DB2 dialect plugin for SQLGlot"
+authors = [
+    {name = "Shubham Kapoor", email = "shubham.kapoor992@gmail.com"}
+]
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "sqlglot>=25.0.0",
+]
+classifiers = [
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+]
+
+[project.entry-points."sqlglot.dialects"]
+db2 = "db2_sqlglot.dialect:Db2"
+
+[project.urls]
+Homepage = "https://github.com/ShubhamKapoor992/db2-sqlglot-dialect"
+Repository = "https://github.com/ShubhamKapoor992/db2-sqlglot-dialect"
