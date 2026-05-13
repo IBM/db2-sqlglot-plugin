@@ -27,30 +27,25 @@ tests/test_db2_dialect.py::TestDB2::test_variable_tokens PASSED          [100%]
 ==================== 6 passed, 28 subtests passed in 0.28s =====================
 ```
 
-### Functional Tests
+### Test Coverage
 
-```python
-# Test 1: FETCH to LIMIT
-transpile('SELECT * FROM t FETCH FIRST 10 ROWS ONLY', read='db2', write='postgres')
-# → SELECT * FROM t FETCH FIRST 10 ROWS ONLY
-
-# Test 2: STRPOS to POSSTR
-transpile('SELECT STRPOS(haystack, needle)', read='postgres', write='db2')
-# → SELECT POSSTR(haystack, needle)
-
-# Test 3: Boolean to 0/1
-transpile('SELECT TRUE, FALSE', read='postgres', write='db2')
-# → SELECT 1, 0
-
-# Test 4: NCHAR preservation
-transpile('CREATE TABLE t (a NCHAR(10))', read='db2', write='db2')
-# → CREATE TABLE t (a NCHAR(10))
-
-# Test 5: DATEDIFF conversion
-transpile('SELECT DATEDIFF(date1, date2)', read='postgres', write='db2')
-# → SELECT DAYS(date1) - DAYS(date2)
-```
-- Comprehensive test coverage
+The test suite validates:
+- ✅ **Basic SQL**: SELECT, INSERT, UPDATE, DELETE, CREATE/DROP TABLE
+- ✅ **Type conversions**: INTEGER→INT, NCHAR→GRAPHIC, NVARCHAR→VARGRAPHIC, DBCLOB→CLOB
+- ✅ **Functions**: POSSTR, VARCHAR_FORMAT, DAYOFWEEK, DAYOFYEAR, GREATEST, LEAST
+- ✅ **Boolean handling**: TRUE/FALSE → 1/0
+- ✅ **Date/Time**: CURRENT DATE, CURRENT TIMESTAMP, DATEDIFF→DAYS
+- ✅ **FETCH FIRST**: Pagination with FETCH FIRST n ROWS ONLY
+- ✅ **OFFSET**: OFFSET n ROWS syntax
+- ✅ **NULL ordering**: NULLS FIRST, NULLS LAST
+- ✅ **Joins**: INNER, LEFT, RIGHT joins
+- ✅ **Aggregations**: COUNT, SUM, AVG, MIN, MAX
+- ✅ **Subqueries & CTEs**: WITH clause support
+- ✅ **CASE expressions**: Simple and searched CASE
+- ✅ **Operators**: IN, BETWEEN, LIKE, IS NULL
+- ✅ **Set operations**: UNION, UNION ALL
+- ✅ **Variable tokens**: @var syntax
+- ✅ **Typed division**: Proper numeric division handling
 
 ## Installation
 

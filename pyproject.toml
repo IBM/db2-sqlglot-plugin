@@ -29,5 +29,5 @@ classifiers = [
 db2 = "db2_sqlglot.dialect:Db2"
 
 [project.urls]
-Homepage = "https://github.com/ShubhamKapoor992/db2-sqlglot-dialect"
-Repository = "https://github.com/ShubhamKapoor992/db2-sqlglot-dialect"
+Homepage = "https://github.com/IBM/db2-sqlglot-plugin"
+Repository = "https://github.com/IBM/db2-sqlglot-plugin"
