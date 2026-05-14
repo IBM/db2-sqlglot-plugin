@@ -133,12 +133,97 @@ When transpiling from other databases to Db2:
 - Typed division
 - Variable tokens (`@var`)
 
+## CI/CD
+
+### GitHub Actions Workflows
+
+This project includes two automated CI/CD workflows:
+
+1. **Unit Tests** (`.github/workflows/test.yml`)
+   - **Triggers:** Push to main, Pull Requests, Manual dispatch
+   - **Platforms:** Ubuntu, macOS, Windows
+   - **Python versions:** 3.8, 3.9, 3.10, 3.11, 3.12
+   - **Features:**
+     - Concurrency control (cancels outdated runs)
+     - Unit tests with coverage reporting
+     - Code quality checks (black, isort, ruff)
+     - Codecov integration
+
+2. **Build and Publish Release** (`.github/workflows/release.yml`)
+   - **Triggers:**
+     - GitHub Release published (builds only, no auto-publish)
+     - Manual workflow dispatch (with choice: Test PyPI or PyPI)
+   - **Features:**
+     - Builds distribution packages (wheel + sdist)
+     - Tests installation on multiple platforms (Ubuntu, macOS, Windows)
+     - Manual control over where to publish (Test PyPI or PyPI)
+     - Prevents accidental production releases
+
+### Creating a Release (Safe Workflow)
+
+#### Step 1: Update Version
+```bash
+# Edit pyproject.toml
+version = "1.0.1"
+
+# Commit and push
+git commit -am "Bump version to 1.0.1"
+git push origin main
+```
+
+#### Step 2: Create GitHub Release
+1. Go to GitHub → Releases → "Draft a new release"
+2. Create a new tag (e.g., `v1.0.1`)
+3. Add release notes
+4. Click "Publish release"
+
+**Result:** Package is built and tested, but **NOT automatically published**
+
+#### Step 3: Choose Where to Publish (Manual Control)
+
+After the release is published, you have two options:
+
+##### Option A: Test on Test PyPI First (Recommended)
+1. Go to **Actions** tab → **Build and Publish Release**
+2. Click **"Run workflow"** button
+3. Select:
+   - **Branch:** `main` (or your release tag)
+   - **Where to publish?** → Select **`test-pypi`**
+4. Click **"Run workflow"**
+5. Verify installation from Test PyPI:
+   ```bash
+   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ db2-sqlglot-dialect
+   ```
+
+##### Option B: Publish to Production PyPI
+1. Go to **Actions** tab → **Build and Publish Release**
+2. Click **"Run workflow"** button
+3. Select:
+   - **Branch:** `main` (or your release tag)
+   - **Where to publish?** → Select **`pypi`**
+4. Click **"Run workflow"**
+5. Package is live on PyPI!
+
+### Why This Approach is Safer
+
+✅ **No accidental releases:** Publishing requires manual action
+✅ **Test first:** Can test on Test PyPI before production
+✅ **Explicit choice:** You choose Test PyPI or PyPI each time
+✅ **Mistake recovery:** If wrong tag created, just don't publish
+✅ **Review opportunity:** Time to review build artifacts before publishing
+
 ## Development
 
 ### Running Tests
 
 ```bash
 pytest tests/
+```
+
+### Running Tests with Coverage
+
+```bash
+pytest tests/ -v --cov=db2_sqlglot --cov-report=term --cov-report=html
 ```
 
 ### Project Structure
