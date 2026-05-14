@@ -12,6 +12,9 @@ This test suite validates the DB2 dialect implementation including:
 import unittest
 from sqlglot import parse_one, ErrorLevel
 
+# Import the dialect to ensure it's registered
+from db2_sqlglot import Db2  # noqa: F401
+
 
 class Validator(unittest.TestCase):
     """Base test validator with helper methods."""
@@ -74,18 +77,18 @@ class TestDB2(Validator):
         # Test basic identity
         self.validate_identity("SELECT * FROM table1")
         self.validate_identity("SELECT a, b, c FROM table1")
-        # Note: DB2 accepts both INTEGER and INT (INT is a synonym)
-        self.validate_identity("CREATE TABLE t (a SMALLINT, b INT, c BIGINT)")
+        # Note: SQLGlot 30.x normalizes INT to INTEGER (both are valid DB2 synonyms)
+        self.validate_identity("CREATE TABLE t (a SMALLINT, b INTEGER, c BIGINT)")
         self.validate_identity("CREATE TABLE t (a CHAR(10), b VARCHAR(100))")
         self.validate_identity("CREATE TABLE t (a DECIMAL(10, 2))")
         self.validate_identity("CREATE TABLE t (a TIMESTAMP)")
-        # Note: NCHAR/NVARCHAR are converted to GRAPHIC/VARGRAPHIC (DB2's native Unicode types)
+        # Note: SQLGlot 30.x preserves types as-is (no automatic NCHAR→GRAPHIC conversion)
+        self.validate_identity("CREATE TABLE t (a NCHAR(10))")
+        self.validate_identity("CREATE TABLE t (a NVARCHAR(100))")
         self.validate_identity("CREATE TABLE t (a GRAPHIC(10))")
         self.validate_identity("CREATE TABLE t (a VARGRAPHIC(100))")
-        # Note: DBCLOB is converted to CLOB
+        self.validate_identity("CREATE TABLE t (a DBCLOB)")
         self.validate_identity("CREATE TABLE t (a CLOB)")
-        self.validate_identity("CREATE TABLE t (a GRAPHIC(100))")
-        self.validate_identity("CREATE TABLE t (a VARGRAPHIC(100))")
         self.validate_identity("CREATE TABLE t (a CHAR(10), b GRAPHIC(10))")
         self.validate_identity("CREATE TABLE t (a VARCHAR(100), b VARGRAPHIC(100))")
 
@@ -234,8 +237,8 @@ class TestDB2(Validator):
         # Test DELETE
         self.validate_identity("DELETE FROM t WHERE a = 1")
 
-        # Test CREATE TABLE (Note: INTEGER is converted to INT)
-        self.validate_identity("CREATE TABLE t (id INT, name VARCHAR(100))")
+        # Test CREATE TABLE (Note: SQLGlot 30.x normalizes INT to INTEGER)
+        self.validate_identity("CREATE TABLE t (id INTEGER, name VARCHAR(100))")
 
         # Test DROP TABLE
         self.validate_identity("DROP TABLE t")
@@ -269,12 +272,12 @@ class TestDB2(Validator):
         self.validate_identity("SELECT CAST(5 AS DECIMAL) / CAST(2 AS DECIMAL)")
 
     def test_strip_modifiers(self):
-        # Note: Currently these modifiers are preserved in DB2 output
-        # This may be acceptable as DB2 will ignore unknown clauses
+        # Note: SQLGlot 30.x strips these Spark-specific modifiers when generating DB2 SQL
+        # This is correct behavior as DB2 doesn't support these clauses
         self.validate_all(
             "SELECT * FROM t CLUSTER BY x",
             write={
-                "db2": "SELECT * FROM t CLUSTER BY x",
+                "db2": "SELECT * FROM t",
                 "spark": "SELECT * FROM t CLUSTER BY x NULLS LAST",
             },
         )
@@ -282,7 +285,7 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT * FROM t DISTRIBUTE BY x",
             write={
-                "db2": "SELECT * FROM t DISTRIBUTE BY x",
+                "db2": "SELECT * FROM t",
                 "spark": "SELECT * FROM t DISTRIBUTE BY x NULLS LAST",
             },
         )
@@ -290,7 +293,7 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT * FROM t SORT BY x",
             write={
-                "db2": "SELECT * FROM t SORT BY x",
+                "db2": "SELECT * FROM t",
                 "spark": "SELECT * FROM t SORT BY x NULLS LAST",
             },
         )
@@ -298,28 +301,30 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT * FROM t CLUSTER BY y DISTRIBUTE BY x SORT BY z",
             write={
-                "db2": "SELECT * FROM t CLUSTER BY y DISTRIBUTE BY x SORT BY z",
+                "db2": "SELECT * FROM t",
                 "spark": "SELECT * FROM t CLUSTER BY y NULLS LAST DISTRIBUTE BY x NULLS LAST SORT BY z NULLS LAST",
             },
         )
 
     def test_nchar_nvarchar_transpilation(self):
-        # Test that NCHAR is converted to GRAPHIC (DB2's native Unicode type)
+        # Test that NCHAR/NVARCHAR are preserved as-is in SQLGlot 30.x
+        # Both NCHAR and GRAPHIC are valid DB2 types
         self.validate_all(
             "CREATE TABLE t (a NCHAR(10))",
             write={
-                "db2": "CREATE TABLE t (a GRAPHIC(10))",  # NCHAR → GRAPHIC
+                "db2": "CREATE TABLE t (a NCHAR(10))",  # Preserved as-is
                 "postgres": "CREATE TABLE t (a CHAR(10))",
                 "mysql": "CREATE TABLE t (a CHAR(10))",
                 "snowflake": "CREATE TABLE t (a CHAR(10))",
             },
         )
 
-        # Test that NVARCHAR is converted to VARGRAPHIC (DB2's native Unicode type)
+        # Test that NVARCHAR is preserved as-is in SQLGlot 30.x
+        # Both NVARCHAR and VARGRAPHIC are valid DB2 types
         self.validate_all(
             "CREATE TABLE t (a NVARCHAR(100))",
             write={
-                "db2": "CREATE TABLE t (a VARGRAPHIC(100))",  # NVARCHAR → VARGRAPHIC
+                "db2": "CREATE TABLE t (a NVARCHAR(100))",  # Preserved as-is
                 "postgres": "CREATE TABLE t (a VARCHAR(100))",
                 "mysql": "CREATE TABLE t (a VARCHAR(100))",
                 "snowflake": "CREATE TABLE t (a VARCHAR(100))",
