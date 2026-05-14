@@ -2,6 +2,11 @@
 
 A DB2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a powerful SQL parser, transpiler, and optimizer.
 
+## Requirements
+
+- **Python:** 3.9 or higher
+- **SQLGlot:** 30.0.0 or higher
+
 ## Features
 
 - Full DB2 SQL syntax support
@@ -142,7 +147,7 @@ This project includes two automated CI/CD workflows:
 1. **Unit Tests** (`.github/workflows/test.yml`)
    - **Triggers:** Push to main, Pull Requests, Manual dispatch
    - **Platforms:** Ubuntu, macOS, Windows
-   - **Python versions:** 3.8, 3.9, 3.10, 3.11, 3.12
+   - **Python versions:** 3.9, 3.10, 3.11, 3.12
    - **Features:**
      - Concurrency control (cancels outdated runs)
      - Unit tests with coverage reporting
