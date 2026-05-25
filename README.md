@@ -1,6 +1,6 @@
-# DB2 SQLGlot Dialect Plugin
+# Db2 SQLGlot Dialect Plugin
 
-A DB2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a powerful SQL parser, transpiler, and optimizer.
+A Db2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a powerful SQL parser, transpiler, and optimizer.
 
 ## Requirements
 
@@ -9,10 +9,10 @@ A DB2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a power
 
 ## Features
 
-- Full DB2 SQL syntax support
-- Cross-dialect transpilation (DB2 ↔ PostgreSQL, MySQL, Snowflake, etc.)
+- Full Db2 SQL syntax support
+- Cross-dialect transpilation (Db2 ↔ PostgreSQL, MySQL, Snowflake, etc.)
 - Type mapping (BOOLEAN → SMALLINT, NCHAR/NVARCHAR support, etc.)
-- DB2-specific functions (POSSTR, VARCHAR_FORMAT, DAYOFWEEK, DAYOFYEAR)
+- Db2-specific functions (POSSTR, VARCHAR_FORMAT, DAYOFWEEK, DAYOFYEAR)
 - FETCH FIRST syntax support
 - NULL ordering support
 

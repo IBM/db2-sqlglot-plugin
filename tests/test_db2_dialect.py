@@ -22,12 +22,12 @@
 #-------------------------------------------------------------------------------------------------#
 
 """
-Tests for DB2 SQLGlot dialect plugin.
+Tests for Db2 SQLGlot dialect plugin.
 
-This test suite validates the DB2 dialect implementation including:
+This test suite validates the Db2 dialect implementation including:
 - Basic SQL parsing and generation
 - Type conversions (BOOLEAN, NCHAR, NVARCHAR)
-- DB2-specific functions (POSSTR, DAYOFWEEK, VARCHAR_FORMAT)
+- Db2-specific functions (POSSTR, DAYOFWEEK, VARCHAR_FORMAT)
 - FETCH FIRST and OFFSET syntax
 - NULL ordering and typed division
 """
@@ -93,7 +93,7 @@ class Validator(unittest.TestCase):
 
 
 class TestDB2(Validator):
-    """Test suite for DB2 dialect."""
+    """Test suite for Db2 dialect."""
 
     dialect = "db2"
 
@@ -102,7 +102,7 @@ class TestDB2(Validator):
         self.validate_identity("SELECT * FROM table1")
         self.validate_identity("SELECT a, b, c FROM table1")
         # Note: SQLGlot 30.x normalizes INT to INTEGER
-        # (both are valid DB2 synonyms)
+        # (both are valid Db2 synonyms)
         self.validate_identity("CREATE TABLE t (a SMALLINT, b INTEGER, c BIGINT)")
         self.validate_identity("CREATE TABLE t (a CHAR(10), b VARCHAR(100))")
         self.validate_identity("CREATE TABLE t (a DECIMAL(10, 2))")
@@ -154,7 +154,7 @@ class TestDB2(Validator):
             },
         )
 
-        # Test boolean conversion (DB2 uses 0/1 for boolean)
+        # Test boolean conversion (Db2 uses 0/1 for boolean)
         self.validate_all(
             "SELECT TRUE, FALSE",
             write={
@@ -312,7 +312,7 @@ class TestDB2(Validator):
 
     def test_strip_modifiers(self):
         # Note: SQLGlot 30.x strips these Spark-specific modifiers when
-        # generating DB2 SQL. This is correct behavior as DB2 doesn't support
+        # generating Db2 SQL. This is correct behavior as Db2 doesn't support
         # these clauses.
         self.validate_all(
             "SELECT * FROM t CLUSTER BY x",
@@ -351,7 +351,7 @@ class TestDB2(Validator):
 
     def test_nchar_nvarchar_transpilation(self):
         # Test that NCHAR/NVARCHAR are preserved as-is in SQLGlot 30.x.
-        # Both NCHAR and GRAPHIC are valid DB2 types.
+        # Both NCHAR and GRAPHIC are valid Db2 types.
         self.validate_all(
             "CREATE TABLE t (a NCHAR(10))",
             write={
@@ -363,7 +363,7 @@ class TestDB2(Validator):
         )
 
         # Test that NVARCHAR is preserved as-is in SQLGlot 30.x.
-        # Both NVARCHAR and VARGRAPHIC are valid DB2 types.
+        # Both NVARCHAR and VARGRAPHIC are valid Db2 types.
         self.validate_all(
             "CREATE TABLE t (a NVARCHAR(100))",
             write={

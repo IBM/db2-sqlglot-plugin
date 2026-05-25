@@ -70,9 +70,9 @@ class Db2(generator.Generator):
 
     TYPE_MAPPING = {
         **generator.Generator.TYPE_MAPPING,
-        # DB2 has native BOOLEAN type (since DB2 11.1)
+        # Db2 has native BOOLEAN type (since Db2 11.1)
         exp.DType.BOOLEAN: "BOOLEAN",
-        # DB2 uses INTEGER, not INT
+        # Db2 uses INTEGER, not INT
         exp.DType.INT: "INTEGER",
         # Other type mappings
         exp.DType.TINYINT: "SMALLINT",
@@ -114,7 +114,7 @@ class Db2(generator.Generator):
         exp.Trim: trim_sql,
     }
     
-    # Note: DB2-specific types (GRAPHIC, VARGRAPHIC, DBCLOB) are automatically
+    # Note: Db2-specific types (GRAPHIC, VARGRAPHIC, DBCLOB) are automatically
     # handled by SQLGlot's default datatype_sql() when parsed as USERDEFINED
     # types. The 'kind' field preserves the original type name, so no custom
     # override needed.

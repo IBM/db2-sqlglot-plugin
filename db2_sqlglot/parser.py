@@ -45,10 +45,10 @@ class Db2Parser(parser.Parser):
         ),
     }
     
-    # Map DB2-specific type keywords to their base types for parsing.
+    # Map Db2-specific type keywords to their base types for parsing.
     # This allows the parser to recognize GRAPHIC, VARGRAPHIC, and DBCLOB as
     # valid types.
     TYPE_TOKENS = {
         *parser.Parser.TYPE_TOKENS,
-        # DB2-specific types will be parsed as DataType with the name preserved
+        # Db2-specific types will be parsed as DataType with the name preserved
     }

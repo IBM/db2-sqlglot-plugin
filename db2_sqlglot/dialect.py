@@ -34,7 +34,7 @@ class Db2(Dialect):
     NULL_ORDERING = "nulls_are_large"
     TYPED_DIVISION = True
 
-    # Time format mappings for DB2
+    # Time format mappings for Db2
     # https://www.ibm.com/docs/en/db2/11.5?topic=functions-timestamp-format
     TIME_MAPPING = {
         "YYYY": "%Y",
@@ -56,7 +56,7 @@ class Db2(Dialect):
     }
 
     class Tokenizer(tokens.Tokenizer):
-        # Don't map DB2-specific types (GRAPHIC, VARGRAPHIC, DBCLOB) to token
+        # Don't map Db2-specific types (GRAPHIC, VARGRAPHIC, DBCLOB) to token
         # types. Let them be parsed as identifiers so we can preserve the
         # original type name. They will be handled in the parser and generator.
         VAR_SINGLE_TOKENS = {"@"}
