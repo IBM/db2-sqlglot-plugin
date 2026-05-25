@@ -144,7 +144,7 @@ When transpiling from other databases to Db2:
 
 This project includes two automated CI/CD workflows:
 
-1. **Unit Tests** (`.github/workflows/test.yml`)
+1. **Unit Tests** (`.github/workflows/unit-tests.yml`)
    - **Triggers:** Push to main, Pull Requests, Manual dispatch
    - **Platforms:** Ubuntu, macOS, Windows
    - **Python versions:** 3.9, 3.10, 3.11, 3.12
@@ -154,17 +154,18 @@ This project includes two automated CI/CD workflows:
      - Code quality checks (black, isort, ruff)
      - Codecov integration
 
-2. **Build and Publish Release** (`.github/workflows/release.yml`)
+2. **Build and Publish Release** (`.github/workflows/build_release.yaml`)
    - **Triggers:**
-     - GitHub Release published (builds only, no auto-publish)
-     - Manual workflow dispatch (with choice: Test PyPI or PyPI)
+     - Version tag push (for example, `v1.0.1`)
+     - Manual workflow dispatch (with choice: Test PyPI or PyPI, plus optional ref)
    - **Features:**
+     - Authorized release gating
      - Builds distribution packages (wheel + sdist)
-     - Tests installation on multiple platforms (Ubuntu, macOS, Windows)
-     - Manual control over where to publish (Test PyPI or PyPI)
-     - Prevents accidental production releases
+     - Tests installation on multiple platforms before publish
+     - Publishes through GitHub environments (`test-pypi` / `pypi`)
+     - Supports approval-gated publishing through environment protection rules
 
-### Creating a Release (Safe Workflow)
+### Creating a Release
 
 #### Step 1: Update Version
 ```bash
@@ -176,46 +177,55 @@ git commit -am "Bump version to 1.0.1"
 git push origin main
 ```
 
-#### Step 2: Create GitHub Release
-1. Go to GitHub → Releases → "Draft a new release"
-2. Create a new tag (e.g., `v1.0.1`)
-3. Add release notes
-4. Click "Publish release"
+#### Step 2: Trigger the Release Workflow
 
-**Result:** Package is built and tested, but **NOT automatically published**
+You can trigger the release workflow in either of these ways:
 
-#### Step 3: Choose Where to Publish (Manual Control)
+##### Option A: Push a Version Tag
+```bash
+git tag v1.0.1
+git push origin v1.0.1
+```
 
-After the release is published, you have two options:
+This triggers [`.github/workflows/build_release.yaml`](db2-sqlglot-dialect/.github/workflows/build_release.yaml).
 
-##### Option A: Test on Test PyPI First (Recommended)
+##### Option B: Run Manually from GitHub Actions
 1. Go to **Actions** tab → **Build and Publish Release**
-2. Click **"Run workflow"** button
+2. Click **"Run workflow"**
 3. Select:
-   - **Branch:** `main` (or your release tag)
-   - **Where to publish?** → Select **`test-pypi`**
+   - **Where to publish?** → `test-pypi` or `pypi`
+   - **Git ref** → tag or branch (for example, `v1.0.1` or `main`)
 4. Click **"Run workflow"**
-5. Verify installation from Test PyPI:
-   ```bash
-   pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ db2-sqlglot-dialect
-   ```
 
-##### Option B: Publish to Production PyPI
-1. Go to **Actions** tab → **Build and Publish Release**
-2. Click **"Run workflow"** button
-3. Select:
-   - **Branch:** `main` (or your release tag)
-   - **Where to publish?** → Select **`pypi`**
-4. Click **"Run workflow"**
-5. Package is live on PyPI!
+#### Step 3: Approval and Publishing
 
-### Why This Approach is Safer
+The workflow:
+- checks that the triggering GitHub user is authorized
+- builds the package
+- validates it with `twine check`
+- tests wheel installation on supported platforms
+- waits for environment approval if configured for `test-pypi` or `pypi`
+- publishes to the selected package index
 
-✅ **No accidental releases:** Publishing requires manual action
-✅ **Test first:** Can test on Test PyPI before production
-✅ **Explicit choice:** You choose Test PyPI or PyPI each time
-✅ **Mistake recovery:** If wrong tag created, just don't publish
-✅ **Review opportunity:** Time to review build artifacts before publishing
+#### Step 4: Verify Installation
+
+For Test PyPI:
+```bash
+pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ db2-sqlglot-dialect
+```
+
+For PyPI:
+```bash
+pip install db2-sqlglot-dialect
+```
+
+### Why This Approach Works Well
+
+✅ **Authorized releases only:** Release workflow checks allowed GitHub users
+✅ **Build verification first:** Package is built and validated before publish
+✅ **Install verification:** Wheel is tested before publish
+✅ **Approval support:** GitHub environments can require approval before publish
+✅ **Flexible triggering:** Supports both version tags and manual dispatch
 
 ## Development
 
