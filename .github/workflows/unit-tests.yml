@@ -78,16 +78,9 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install ruff black isort
+          pip install flake8
       
-      - name: Check code formatting with black
-        run: black --check db2_sqlglot/ tests/
-        continue-on-error: true
-      
-      - name: Check import sorting with isort
-        run: isort --check-only db2_sqlglot/ tests/
-        continue-on-error: true
-      
-      - name: Lint with ruff
-        run: ruff check db2_sqlglot/ tests/
-        continue-on-error: true
+      - name: Lint with flake8
+        run: |
+          flake8 --config .flake8 db2_sqlglot/ tests/
+        continue-on-error: false

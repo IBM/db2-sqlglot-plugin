@@ -1,3 +1,26 @@
+#-------------------------------------------------------------------------------------------------#
+#                      DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY                       #
+#                                                                                                 #
+#  (C) COPYRIGHT International Business Machines Corp. 2026 All Rights Reserved                  #
+#  Licensed Materials - Property of IBM                                                           #
+#                                                                                                 #
+#  US Government Users Restricted Rights - Use, duplication or disclosure restricted by GSA ADP   #
+#  Schedule Contract with IBM Corp.                                                               #
+#                                                                                                 #
+#  The following source code ("Sample") is owned by International Business Machines Corporation   #
+#  or one of its subsidiaries ("IBM") and is copyrighted and licensed, not sold. You may use,    #
+#  copy, modify, and distribute the Sample in any form without payment to IBM, for the purpose    #
+#  of assisting you in the creation of Python applications using the ibm_db library.              #
+#                                                                                                 #
+#  The Sample code is provided to you on an "AS IS" basis, without warranty of any kind. IBM     #
+#  HEREBY EXPRESSLY DISCLAIMS ALL WARRANTIES, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT       #
+#  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.    #
+#  Some jurisdictions do not allow for the exclusion or limitation of implied warranties, so the  #
+#  above limitations or exclusions may not apply to you. IBM shall not be liable for any damages  #
+#  you suffer as a result of using, copying, modifying or distributing the Sample, even if IBM    #
+#  has been advised of the possibility of such damages.                                           #
+#-------------------------------------------------------------------------------------------------#
+
 """
 Tests for DB2 SQLGlot dialect plugin.
 
@@ -10,7 +33,8 @@ This test suite validates the DB2 dialect implementation including:
 """
 
 import unittest
-from sqlglot import parse_one, ErrorLevel
+
+from sqlglot import ErrorLevel, parse_one
 
 # Import the dialect to ensure it's registered
 from db2_sqlglot import Db2  # noqa: F401
@@ -18,24 +42,24 @@ from db2_sqlglot import Db2  # noqa: F401
 
 class Validator(unittest.TestCase):
     """Base test validator with helper methods."""
-    
+
     dialect = "db2"
 
     def parse_one(self, sql, **kwargs):
         return parse_one(sql, read=self.dialect, **kwargs)
 
-    def validate_identity(
-        self, sql, write_sql=None, pretty=False, identify=False
-    ):
+    def validate_identity(self, sql, write_sql=None, pretty=False, identify=False):
         """Validate that SQL round-trips correctly."""
         expression = self.parse_one(sql)
         self.assertEqual(
-            write_sql or sql, 
-            expression.sql(dialect=self.dialect, pretty=pretty, identify=identify)
+            write_sql or sql,
+            expression.sql(dialect=self.dialect, pretty=pretty, identify=identify),
         )
         return expression
 
-    def validate_all(self, sql, read=None, write=None, pretty=False, identify=False):
+    def validate_all(
+        self, sql, read=None, write=None, pretty=False, identify=False
+    ):
         """
         Validate that:
         1. Everything in `read` transpiles to `sql`
@@ -70,19 +94,21 @@ class Validator(unittest.TestCase):
 
 class TestDB2(Validator):
     """Test suite for DB2 dialect."""
-    
+
     dialect = "db2"
 
     def test_db2(self):
         # Test basic identity
         self.validate_identity("SELECT * FROM table1")
         self.validate_identity("SELECT a, b, c FROM table1")
-        # Note: SQLGlot 30.x normalizes INT to INTEGER (both are valid DB2 synonyms)
+        # Note: SQLGlot 30.x normalizes INT to INTEGER
+        # (both are valid DB2 synonyms)
         self.validate_identity("CREATE TABLE t (a SMALLINT, b INTEGER, c BIGINT)")
         self.validate_identity("CREATE TABLE t (a CHAR(10), b VARCHAR(100))")
         self.validate_identity("CREATE TABLE t (a DECIMAL(10, 2))")
         self.validate_identity("CREATE TABLE t (a TIMESTAMP)")
-        # Note: SQLGlot 30.x preserves types as-is (no automatic NCHAR→GRAPHIC conversion)
+        # Note: SQLGlot 30.x preserves types as-is
+        # (no automatic NCHAR→GRAPHIC conversion)
         self.validate_identity("CREATE TABLE t (a NCHAR(10))")
         self.validate_identity("CREATE TABLE t (a NVARCHAR(100))")
         self.validate_identity("CREATE TABLE t (a GRAPHIC(10))")
@@ -90,7 +116,9 @@ class TestDB2(Validator):
         self.validate_identity("CREATE TABLE t (a DBCLOB)")
         self.validate_identity("CREATE TABLE t (a CLOB)")
         self.validate_identity("CREATE TABLE t (a CHAR(10), b GRAPHIC(10))")
-        self.validate_identity("CREATE TABLE t (a VARCHAR(100), b VARGRAPHIC(100))")
+        self.validate_identity(
+            "CREATE TABLE t (a VARCHAR(100), b VARGRAPHIC(100))"
+        )
 
         # Test FETCH FIRST syntax
         self.validate_identity("SELECT * FROM t FETCH FIRST 10 ROWS ONLY")
@@ -166,9 +194,15 @@ class TestDB2(Validator):
         )
 
         # Test joins
-        self.validate_identity("SELECT * FROM t1 INNER JOIN t2 ON t1.id = t2.id")
-        self.validate_identity("SELECT * FROM t1 LEFT JOIN t2 ON t1.id = t2.id")
-        self.validate_identity("SELECT * FROM t1 RIGHT JOIN t2 ON t1.id = t2.id")
+        self.validate_identity(
+            "SELECT * FROM t1 INNER JOIN t2 ON t1.id = t2.id"
+        )
+        self.validate_identity(
+            "SELECT * FROM t1 LEFT JOIN t2 ON t1.id = t2.id"
+        )
+        self.validate_identity(
+            "SELECT * FROM t1 RIGHT JOIN t2 ON t1.id = t2.id"
+        )
 
         # Test subqueries
         self.validate_identity("SELECT * FROM (SELECT a, b FROM t1) AS subq")
@@ -180,7 +214,9 @@ class TestDB2(Validator):
         self.validate_identity("SELECT MIN(amount), MAX(amount) FROM t")
 
         # Test GROUP BY and HAVING
-        self.validate_identity("SELECT category, COUNT(*) FROM t GROUP BY category")
+        self.validate_identity(
+            "SELECT category, COUNT(*) FROM t GROUP BY category"
+        )
         self.validate_identity(
             "SELECT category, COUNT(*) FROM t GROUP BY category HAVING COUNT(*) > 5"
         )
@@ -191,7 +227,9 @@ class TestDB2(Validator):
         self.validate_identity("SELECT * FROM t ORDER BY a, b DESC")
 
         # Test CASE expressions
-        self.validate_identity("SELECT CASE WHEN a > 0 THEN 'positive' ELSE 'negative' END FROM t")
+        self.validate_identity(
+            "SELECT CASE WHEN a > 0 THEN 'positive' ELSE 'negative' END FROM t"
+        )
         self.validate_identity(
             "SELECT CASE a WHEN 1 THEN 'one' WHEN 2 THEN 'two' ELSE 'other' END FROM t"
         )
@@ -237,7 +275,8 @@ class TestDB2(Validator):
         # Test DELETE
         self.validate_identity("DELETE FROM t WHERE a = 1")
 
-        # Test CREATE TABLE (Note: SQLGlot 30.x normalizes INT to INTEGER)
+        # Test CREATE TABLE
+        # (Note: SQLGlot 30.x normalizes INT to INTEGER)
         self.validate_identity("CREATE TABLE t (id INTEGER, name VARCHAR(100))")
 
         # Test DROP TABLE
@@ -272,8 +311,9 @@ class TestDB2(Validator):
         self.validate_identity("SELECT CAST(5 AS DECIMAL) / CAST(2 AS DECIMAL)")
 
     def test_strip_modifiers(self):
-        # Note: SQLGlot 30.x strips these Spark-specific modifiers when generating DB2 SQL
-        # This is correct behavior as DB2 doesn't support these clauses
+        # Note: SQLGlot 30.x strips these Spark-specific modifiers when
+        # generating DB2 SQL. This is correct behavior as DB2 doesn't support
+        # these clauses.
         self.validate_all(
             "SELECT * FROM t CLUSTER BY x",
             write={
@@ -302,13 +342,16 @@ class TestDB2(Validator):
             "SELECT * FROM t CLUSTER BY y DISTRIBUTE BY x SORT BY z",
             write={
                 "db2": "SELECT * FROM t",
-                "spark": "SELECT * FROM t CLUSTER BY y NULLS LAST DISTRIBUTE BY x NULLS LAST SORT BY z NULLS LAST",
+                "spark": (
+                    "SELECT * FROM t CLUSTER BY y NULLS LAST "
+                    "DISTRIBUTE BY x NULLS LAST SORT BY z NULLS LAST"
+                ),
             },
         )
 
     def test_nchar_nvarchar_transpilation(self):
-        # Test that NCHAR/NVARCHAR are preserved as-is in SQLGlot 30.x
-        # Both NCHAR and GRAPHIC are valid DB2 types
+        # Test that NCHAR/NVARCHAR are preserved as-is in SQLGlot 30.x.
+        # Both NCHAR and GRAPHIC are valid DB2 types.
         self.validate_all(
             "CREATE TABLE t (a NCHAR(10))",
             write={
@@ -319,8 +362,8 @@ class TestDB2(Validator):
             },
         )
 
-        # Test that NVARCHAR is preserved as-is in SQLGlot 30.x
-        # Both NVARCHAR and VARGRAPHIC are valid DB2 types
+        # Test that NVARCHAR is preserved as-is in SQLGlot 30.x.
+        # Both NVARCHAR and VARGRAPHIC are valid DB2 types.
         self.validate_all(
             "CREATE TABLE t (a NVARCHAR(100))",
             write={

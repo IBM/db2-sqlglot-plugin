@@ -1,3 +1,26 @@
+#-------------------------------------------------------------------------------------------------#
+#                      DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY                       #
+#                                                                                                 #
+#  (C) COPYRIGHT International Business Machines Corp. 2026 All Rights Reserved             #
+#  Licensed Materials - Property of IBM                                                           #
+#                                                                                                 #
+#  US Government Users Restricted Rights - Use, duplication or disclosure restricted by GSA ADP   #
+#  Schedule Contract with IBM Corp.                                                               #
+#                                                                                                 #
+#  The following source code ("Sample") is owned by International Business Machines Corporation   #
+#  or one of its subsidiaries ("IBM") and is copyrighted and licensed, not sold. You may use,     #
+#  copy, modify, and distribute the Sample in any form without payment to IBM, for the purpose    #
+#  of assisting you in the creation of Python applications using the ibm_db library.              #
+#                                                                                                 #
+#  The Sample code is provided to you on an "AS IS" basis, without warranty of any kind. IBM      #
+#  HEREBY EXPRESSLY DISCLAIMS ALL WARRANTIES, EITHER EXPRESS OR IMPLIED, INCLUDING, BUT NOT       #
+#  LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE.    #
+#  Some jurisdictions do not allow for the exclusion or limitation of implied warranties, so the  #
+#  above limitations or exclusions may not apply to you. IBM shall not be liable for any damages  #
+#  you suffer as a result of using, copying, modifying or distributing the Sample, even if IBM    #
+#  has been advised of the possibility of such damages.                                           #
+#-------------------------------------------------------------------------------------------------#
+
 from __future__ import annotations
 
 import typing as t
@@ -17,7 +40,9 @@ from sqlglot.dialects.dialect import (
 def _date_add_sql(
     kind: str,
 ) -> t.Callable[[generator.Generator, exp.DateAdd | exp.DateSub], str]:
-    def func(self: generator.Generator, expression: exp.DateAdd | exp.DateSub) -> str:
+    def func(
+        self: generator.Generator, expression: exp.DateAdd | exp.DateSub
+    ) -> str:
         this = self.sql(expression, "this")
         unit = expression.args.get("unit")
         value = self._simplify_unless_literal(expression.expression)
@@ -72,7 +97,10 @@ class Db2(generator.Generator):
         exp.ArgMin: rename_func("MIN"),
         exp.DateAdd: _date_add_sql("+"),
         exp.DateSub: _date_add_sql("-"),
-        exp.DateDiff: lambda self, e: f"{self.func('DAYS', e.this)} - {self.func('DAYS', e.expression)}",
+        exp.DateDiff: lambda self, e: (
+            f"{self.func('DAYS', e.this)} - "
+            f"{self.func('DAYS', e.expression)}"
+        ),
         exp.CurrentDate: lambda self, e: "CURRENT DATE",
         exp.CurrentTimestamp: lambda self, e: "CURRENT TIMESTAMP",
         exp.ILike: no_ilike_sql,
@@ -87,9 +115,9 @@ class Db2(generator.Generator):
     }
     
     # Note: DB2-specific types (GRAPHIC, VARGRAPHIC, DBCLOB) are automatically
-    # handled by SQLGlot's default datatype_sql() when parsed as USERDEFINED types.
-    # The 'kind' field preserves the original type name, so no custom override needed.
-
+    # handled by SQLGlot's default datatype_sql() when parsed as USERDEFINED
+    # types. The 'kind' field preserves the original type name, so no custom
+    # override needed.
     def extract_sql(self, expression: exp.Extract) -> str:
         this = self.sql(expression, "this")
         expression_sql = self.sql(expression, "expression")
