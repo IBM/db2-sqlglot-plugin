@@ -1,4 +1,4 @@
-name: Mend Scan
+name: Scans
 
 on:
   push:
