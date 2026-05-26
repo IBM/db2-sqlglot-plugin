@@ -48,14 +48,14 @@ jobs:
           pytest tests/ -v --cov=db2_sqlglot --cov-report=xml --cov-report=term
         shell: bash
       
-      - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
-        uses: codecov/codecov-action@v5
-        with:
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          fail_ci_if_error: false
+ #     - name: Upload coverage to Codecov
+ #       if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.11'
+ #       uses: codecov/codecov-action@v5
+ #       with:
+ #        files: ./coverage.xml
+ #        flags: unittests
+ #        name: codecov-umbrella
+ #        fail_ci_if_error: false
 
   lint:
     name: Code Quality
