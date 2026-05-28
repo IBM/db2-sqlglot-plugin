@@ -62,7 +62,7 @@ jobs:
 
       - name: Upload Mend scan report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: mend-scan-report
           path: |
@@ -98,7 +98,7 @@ jobs:
 
       - name: Upload Pylint Report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: pylint-quality-report
           path: pylint-report.json
@@ -133,7 +133,7 @@ jobs:
 
       - name: Upload report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: bandit-security-report
           path: bandit-report.json
