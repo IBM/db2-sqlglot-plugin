@@ -381,7 +381,7 @@ class TestDB2(Validator):
         self.validate_identity("SET @var = 1")
 
     def test_uuid_type_conversion(self):
-        """Test that PostgreSQL UUID type is converted to CHAR(36) in DB2 (Issue #1)"""
+        """Test that PostgreSQL UUID type is converted to CHAR(36) in Db2"""
         # CREATE TABLE with UUID column
         self.validate_all(
             "CREATE TABLE patients (patient_id UUID NOT NULL)",
@@ -399,7 +399,7 @@ class TestDB2(Validator):
         )
 
     def test_uuid_default_value(self):
-        """Test that gen_random_uuid() DEFAULT is converted to '0' in DB2 (Issue #1)"""
+        """Test that gen_random_uuid() DEFAULT is converted to '0' in Db2"""
         # CREATE TABLE with DEFAULT gen_random_uuid()
         self.validate_all(
             "CREATE TABLE patients (patient_id UUID DEFAULT gen_random_uuid() NOT NULL)",
@@ -421,7 +421,7 @@ class TestDB2(Validator):
         )
 
     def test_uuid_cast_removal(self):
-        """Test that CAST to UUID is removed in DB2 (Issue #1)"""
+        """Test that CAST to UUID is removed in Db2 """
         # Simple UUID cast in SELECT
         self.validate_all(
             "SELECT '550e8400-e29b-41d4-a716-446655440000'::UUID AS patient_id",
