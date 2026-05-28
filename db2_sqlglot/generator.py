@@ -37,6 +37,25 @@ from sqlglot.dialects.dialect import (
 )
 
 
+def _add_sysibm_dual(expression: exp.Select) -> exp.Select:
+    """
+    Add SYSIBM.SYSDUMMY1 table for SELECT statements without FROM clause.
+    DB2 requires a FROM clause in SELECT statements (Issue #2).
+    """
+    # Note: SQLGlot uses 'from_' (with underscore) as the key for FROM clauses
+    if not expression.args.get("from_"):
+        expression.set(
+            "from_",
+            exp.From(
+                this=exp.Table(
+                    this=exp.Identifier(this="SYSDUMMY1"),
+                    db=exp.Identifier(this="SYSIBM")
+                )
+            )
+        )
+    return expression
+
+
 def _date_add_sql(
     kind: str,
 ) -> t.Callable[[generator.Generator, exp.DateAdd | exp.DateSub], str]:
@@ -107,7 +126,7 @@ class Db2(generator.Generator):
         exp.Max: max_or_greatest,
         exp.Min: min_or_least,
         exp.Pivot: no_pivot_sql,
-        exp.Select: transforms.preprocess([transforms.eliminate_distinct_on]),
+        exp.Select: transforms.preprocess([transforms.eliminate_distinct_on, _add_sysibm_dual]),
         exp.StrPosition: rename_func("POSSTR"),
         exp.TimeToStr: rename_func("VARCHAR_FORMAT"),
         exp.TryCast: no_trycast_sql,
