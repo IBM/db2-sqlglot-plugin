@@ -40,7 +40,7 @@ from sqlglot.dialects.dialect import (
 def _add_sysibm_dual(expression: exp.Select) -> exp.Select:
     """
     Add SYSIBM.SYSDUMMY1 table for SELECT statements without FROM clause.
-    DB2 requires a FROM clause in SELECT statements (Issue #2).
+    Db2 requires a FROM clause in SELECT statements.
     """
     # Note: SQLGlot uses 'from_' (with underscore) as the key for FROM clauses
     if not expression.args.get("from_"):

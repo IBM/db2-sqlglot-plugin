@@ -381,7 +381,7 @@ class TestDB2(Validator):
         self.validate_identity("SET @var = 1")
 
     def test_select_without_from(self):
-        """Test that SELECT without FROM adds SYSIBM.SYSDUMMY1 (Issue #2)"""
+        """Test that SELECT without FROM adds SYSIBM.SYSDUMMY1"""
         # Simple SELECT without FROM
         self.validate_all(
             "SELECT 1",
