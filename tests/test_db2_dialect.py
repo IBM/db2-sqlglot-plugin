@@ -399,12 +399,18 @@ class TestDB2(Validator):
         )
 
     def test_uuid_default_value(self):
-        """Test that gen_random_uuid() DEFAULT is converted to '0' in Db2"""
+        """Test that gen_random_uuid() DEFAULT is removed in Db2
+        
+        Db2 doesn't have UUID generation functions. The DEFAULT clause is removed
+        to avoid issues with primary keys (a static default like '0' would cause
+        duplicate key violations). Users must handle UUID generation in their
+        application code or via DB2 triggers.
+        """
         # CREATE TABLE with DEFAULT gen_random_uuid()
         self.validate_all(
             "CREATE TABLE patients (patient_id UUID DEFAULT gen_random_uuid() NOT NULL)",
             write={
-                "db2": "CREATE TABLE patients (patient_id CHAR(36) DEFAULT '0' NOT NULL)",
+                "db2": "CREATE TABLE patients (patient_id CHAR(36) NOT NULL)",
             },
         )
 
@@ -416,7 +422,7 @@ class TestDB2(Validator):
                 CONSTRAINT patients_pk PRIMARY KEY (patient_id)
             )""",
             write={
-                "db2": "CREATE TABLE public.patients (patient_id CHAR(36) DEFAULT '0' NOT NULL, week_of_birth DATE NOT NULL, CONSTRAINT patients_pk PRIMARY KEY (patient_id))",  # noqa: E501
+                "db2": "CREATE TABLE public.patients (patient_id CHAR(36) NOT NULL, week_of_birth DATE NOT NULL, CONSTRAINT patients_pk PRIMARY KEY (patient_id))",  # noqa: E501
             },
         )
 
