@@ -132,13 +132,13 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT CURRENT_DATE",
             write={
-                "db2": "SELECT CURRENT DATE",
+                "db2": "SELECT CURRENT DATE FROM SYSIBM.SYSDUMMY1",
             },
         )
         self.validate_all(
             "SELECT CURRENT_TIMESTAMP",
             write={
-                "db2": "SELECT CURRENT TIMESTAMP",
+                "db2": "SELECT CURRENT TIMESTAMP FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -150,7 +150,7 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT STRPOS(haystack, needle)",
             write={
-                "db2": "SELECT POSSTR(haystack, needle)",
+                "db2": "SELECT POSSTR(haystack, needle) FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -158,7 +158,7 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT TRUE, FALSE",
             write={
-                "db2": "SELECT 1, 0",
+                "db2": "SELECT 1, 0 FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -166,14 +166,14 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT EXTRACT(DAYOFWEEK FROM date_col)",
             write={
-                "db2": "SELECT DAYOFWEEK(date_col)",
+                "db2": "SELECT DAYOFWEEK(date_col) FROM SYSIBM.SYSDUMMY1",
             },
         )
 
         self.validate_all(
             "SELECT EXTRACT(DAYOFYEAR FROM date_col)",
             write={
-                "db2": "SELECT DAYOFYEAR(date_col)",
+                "db2": "SELECT DAYOFYEAR(date_col) FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -181,7 +181,7 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT TIME_TO_STR(timestamp_col, 'YYYY-MM-DD')",
             write={
-                "db2": "SELECT VARCHAR_FORMAT(timestamp_col, 'YYYY-MM-DD')",
+                "db2": "SELECT VARCHAR_FORMAT(timestamp_col, 'YYYY-MM-DD') FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -189,7 +189,7 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT DATEDIFF(date1, date2)",
             write={
-                "db2": "SELECT DAYS(date1) - DAYS(date2)",
+                "db2": "SELECT DAYS(date1) - DAYS(date2) FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -286,14 +286,14 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT MAX(a, b, c)",
             write={
-                "db2": "SELECT GREATEST(a, b, c)",
+                "db2": "SELECT GREATEST(a, b, c) FROM SYSIBM.SYSDUMMY1",
             },
         )
 
         self.validate_all(
             "SELECT MIN(a, b, c)",
             write={
-                "db2": "SELECT LEAST(a, b, c)",
+                "db2": "SELECT LEAST(a, b, c) FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -305,10 +305,12 @@ class TestDB2(Validator):
         self.validate_identity("SELECT * FROM t ORDER BY x DESC NULLS LAST")
 
     def test_typed_division(self):
-        self.validate_identity("SELECT 5 / 2")
+        self.validate_identity("SELECT 5 / 2 FROM SYSIBM.SYSDUMMY1")
         self.validate_identity("SELECT a / b FROM t")
-        self.validate_identity("SELECT 5.0 / 2.0")
-        self.validate_identity("SELECT CAST(5 AS DECIMAL) / CAST(2 AS DECIMAL)")
+        self.validate_identity("SELECT 5.0 / 2.0 FROM SYSIBM.SYSDUMMY1")
+        self.validate_identity(
+            "SELECT CAST(5 AS DECIMAL) / CAST(2 AS DECIMAL) FROM SYSIBM.SYSDUMMY1"
+        )
 
     def test_strip_modifiers(self):
         # Note: SQLGlot 30.x strips these Spark-specific modifiers when
@@ -375,8 +377,70 @@ class TestDB2(Validator):
         )
 
     def test_variable_tokens(self):
-        self.validate_identity("SELECT @var")
+        self.validate_identity("SELECT @var FROM SYSIBM.SYSDUMMY1")
         self.validate_identity("SET @var = 1")
+
+    def test_select_without_from(self):
+        """Test that SELECT without FROM adds SYSIBM.SYSDUMMY1"""
+        # Simple SELECT without FROM
+        self.validate_all(
+            "SELECT 1",
+            write={
+                "db2": "SELECT 1 FROM SYSIBM.SYSDUMMY1",
+            },
+        )
+
+        # SELECT with expression without FROM
+        self.validate_all(
+            "SELECT 1 + 1",
+            write={
+                "db2": "SELECT 1 + 1 FROM SYSIBM.SYSDUMMY1",
+            },
+        )
+
+        # SELECT with function without FROM
+        self.validate_all(
+            "SELECT CURRENT_DATE",
+            write={
+                "db2": "SELECT CURRENT DATE FROM SYSIBM.SYSDUMMY1",
+            },
+        )
+
+        # SELECT with FROM should not add SYSIBM.SYSDUMMY1
+        self.validate_identity("SELECT * FROM users")
+        self.validate_identity("SELECT id, name FROM users")
+
+        # Subquery without FROM in outer query
+        self.validate_all(
+            "SELECT (SELECT COUNT(*) FROM users)",
+            write={
+                "db2": "SELECT (SELECT COUNT(*) FROM users) FROM SYSIBM.SYSDUMMY1",
+            },
+        )
+
+        # Subquery without FROM in inner query
+        self.validate_all(
+            "SELECT * FROM (SELECT 1) AS subq",
+            write={
+                "db2": "SELECT * FROM (SELECT 1 FROM SYSIBM.SYSDUMMY1) AS subq",
+            },
+        )
+
+        # Both outer and inner queries without FROM
+        self.validate_all(
+            "SELECT (SELECT 1)",
+            write={
+                "db2": "SELECT (SELECT 1 FROM SYSIBM.SYSDUMMY1) FROM SYSIBM.SYSDUMMY1",
+            },
+        )
+
+        # Nested subqueries with mixed FROM clauses
+        self.validate_all(
+            "SELECT * FROM (SELECT (SELECT 1) AS val FROM users) AS subq",
+            write={
+                "db2": "SELECT * FROM (SELECT (SELECT 1 FROM SYSIBM.SYSDUMMY1) AS val FROM users) AS subq",  # noqa: E501
+            },
+        )
 
 
 if __name__ == "__main__":
