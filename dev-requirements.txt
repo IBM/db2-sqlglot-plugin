@@ -1,3 +1,6 @@
+# Development dependencies
+# This file is kept for compatibility with traditional pip workflows
+# Source of truth: pyproject.toml (though dev deps may not be fully specified there)
 black>=25.1.0,<26.0.0
 flake8~=7.3
 mypy==1.6.0
