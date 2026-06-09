@@ -1,0 +1,25 @@
+# For more on configuring pre-commit hooks (see https://pre-commit.com/)
+
+default_language_version:
+  python: python3.9
+
+repos:
+- repo: https://github.com/pre-commit/pre-commit-hooks
+  rev: v3.2.0
+  hooks:
+  - id: check-yaml
+    args: [--unsafe]
+  - id: check-json
+  - id: end-of-file-fixer
+  - id: trailing-whitespace
+  - id: check-case-conflict
+- repo: https://github.com/astral-sh/ruff-pre-commit
+  rev: v0.15.16
+  hooks:
+  - id: ruff-format
+  - id: ruff-format
+    alias: ruff-format-check
+    stages: [manual]
+    args:
+    - "--check"
+    - "--diff"

@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------------------#
 #                      DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY                       #
 #                                                                                                 #
 #  (C) COPYRIGHT International Business Machines Corp. 2026 All Rights Reserved                  #
@@ -19,7 +19,7 @@
 #  above limitations or exclusions may not apply to you. IBM shall not be liable for any damages  #
 #  you suffer as a result of using, copying, modifying or distributing the Sample, even if IBM    #
 #  has been advised of the possibility of such damages.                                           #
-#-------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------------------#
 
 """
 Tests for Db2 SQLGlot dialect plugin.
@@ -57,9 +57,7 @@ class Validator(unittest.TestCase):
         )
         return expression
 
-    def validate_all(
-        self, sql, read=None, write=None, pretty=False, identify=False
-    ):
+    def validate_all(self, sql, read=None, write=None, pretty=False, identify=False):
         """
         Validate that:
         1. Everything in `read` transpiles to `sql`
@@ -116,9 +114,7 @@ class TestDB2(Validator):
         self.validate_identity("CREATE TABLE t (a DBCLOB)")
         self.validate_identity("CREATE TABLE t (a CLOB)")
         self.validate_identity("CREATE TABLE t (a CHAR(10), b GRAPHIC(10))")
-        self.validate_identity(
-            "CREATE TABLE t (a VARCHAR(100), b VARGRAPHIC(100))"
-        )
+        self.validate_identity("CREATE TABLE t (a VARCHAR(100), b VARGRAPHIC(100))")
 
         # Test FETCH FIRST syntax
         self.validate_identity("SELECT * FROM t FETCH FIRST 10 ROWS ONLY")
@@ -194,15 +190,9 @@ class TestDB2(Validator):
         )
 
         # Test joins
-        self.validate_identity(
-            "SELECT * FROM t1 INNER JOIN t2 ON t1.id = t2.id"
-        )
-        self.validate_identity(
-            "SELECT * FROM t1 LEFT JOIN t2 ON t1.id = t2.id"
-        )
-        self.validate_identity(
-            "SELECT * FROM t1 RIGHT JOIN t2 ON t1.id = t2.id"
-        )
+        self.validate_identity("SELECT * FROM t1 INNER JOIN t2 ON t1.id = t2.id")
+        self.validate_identity("SELECT * FROM t1 LEFT JOIN t2 ON t1.id = t2.id")
+        self.validate_identity("SELECT * FROM t1 RIGHT JOIN t2 ON t1.id = t2.id")
 
         # Test subqueries
         self.validate_identity("SELECT * FROM (SELECT a, b FROM t1) AS subq")
@@ -214,9 +204,7 @@ class TestDB2(Validator):
         self.validate_identity("SELECT MIN(amount), MAX(amount) FROM t")
 
         # Test GROUP BY and HAVING
-        self.validate_identity(
-            "SELECT category, COUNT(*) FROM t GROUP BY category"
-        )
+        self.validate_identity("SELECT category, COUNT(*) FROM t GROUP BY category")
         self.validate_identity(
             "SELECT category, COUNT(*) FROM t GROUP BY category HAVING COUNT(*) > 5"
         )
@@ -227,9 +215,7 @@ class TestDB2(Validator):
         self.validate_identity("SELECT * FROM t ORDER BY a, b DESC")
 
         # Test CASE expressions
-        self.validate_identity(
-            "SELECT CASE WHEN a > 0 THEN 'positive' ELSE 'negative' END FROM t"
-        )
+        self.validate_identity("SELECT CASE WHEN a > 0 THEN 'positive' ELSE 'negative' END FROM t")
         self.validate_identity(
             "SELECT CASE a WHEN 1 THEN 'one' WHEN 2 THEN 'two' ELSE 'other' END FROM t"
         )

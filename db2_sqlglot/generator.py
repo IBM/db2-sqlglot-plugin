@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------------------#
 #                      DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY                       #
 #                                                                                                 #
 #  (C) COPYRIGHT International Business Machines Corp. 2026 All Rights Reserved             #
@@ -19,7 +19,7 @@
 #  above limitations or exclusions may not apply to you. IBM shall not be liable for any damages  #
 #  you suffer as a result of using, copying, modifying or distributing the Sample, even if IBM    #
 #  has been advised of the possibility of such damages.                                           #
-#-------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------------------#
 
 from __future__ import annotations
 
@@ -48,10 +48,9 @@ def _add_sysibm_dual(expression: exp.Select) -> exp.Select:
             "from_",
             exp.From(
                 this=exp.Table(
-                    this=exp.Identifier(this="SYSDUMMY1"),
-                    db=exp.Identifier(this="SYSIBM")
+                    this=exp.Identifier(this="SYSDUMMY1"), db=exp.Identifier(this="SYSIBM")
                 )
-            )
+            ),
         )
     return expression
 
@@ -59,9 +58,7 @@ def _add_sysibm_dual(expression: exp.Select) -> exp.Select:
 def _date_add_sql(
     kind: str,
 ) -> t.Callable[[generator.Generator, exp.DateAdd | exp.DateSub], str]:
-    def func(
-        self: generator.Generator, expression: exp.DateAdd | exp.DateSub
-    ) -> str:
+    def func(self: generator.Generator, expression: exp.DateAdd | exp.DateSub) -> str:
         this = self.sql(expression, "this")
         unit = expression.args.get("unit")
         value = self._simplify_unless_literal(expression.expression)
@@ -119,8 +116,7 @@ class Db2(generator.Generator):
         exp.DateAdd: _date_add_sql("+"),
         exp.DateSub: _date_add_sql("-"),
         exp.DateDiff: lambda self, e: (
-            f"{self.func('DAYS', e.this)} - "
-            f"{self.func('DAYS', e.expression)}"
+            f"{self.func('DAYS', e.this)} - {self.func('DAYS', e.expression)}"
         ),
         exp.CurrentDate: lambda self, e: "CURRENT DATE",
         exp.CurrentTimestamp: lambda self, e: "CURRENT TIMESTAMP",
@@ -134,7 +130,7 @@ class Db2(generator.Generator):
         exp.TryCast: no_trycast_sql,
         exp.Trim: trim_sql,
     }
-    
+
     # Note: Db2-specific types (GRAPHIC, VARGRAPHIC, DBCLOB) are automatically
     # handled by SQLGlot's default datatype_sql() when parsed as USERDEFINED
     # types. The 'kind' field preserves the original type name, so no custom
