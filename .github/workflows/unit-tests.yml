@@ -43,6 +43,11 @@ jobs:
           pip install -e .
           pip install -r dev-requirements.txt
 
+      - name: Print Python and SQLGlot versions
+        run: |
+          python --version
+          python -c "import sqlglot; print('SQLGlot version:', sqlglot.__version__)"
+
       - name: Run unit tests
         run: |
           pytest tests/ -v --cov=db2_sqlglot --cov-report=xml --cov-report=term
