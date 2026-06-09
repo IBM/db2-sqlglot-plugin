@@ -12,7 +12,7 @@ authors = [
 readme = "README.md"
 requires-python = ">=3.9"
 dependencies = [
-    "sqlglot>=30.0.0",
+    "sqlglot==30.9.0",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
