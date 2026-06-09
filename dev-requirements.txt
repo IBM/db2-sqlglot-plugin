@@ -8,5 +8,5 @@ pytest>=9.0.3
 pytest-cov~=6.0
 pre-commit~=3.5
 twine~=4.0
-wheel>=0.46.2
+wheel>=0.47.0
 pylint>=3.0,<4.0
