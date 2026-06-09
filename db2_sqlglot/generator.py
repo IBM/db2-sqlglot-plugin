@@ -102,6 +102,8 @@ class Db2(generator.Generator):
         exp.DType.NVARCHAR: "NVARCHAR",
         exp.DType.TIMESTAMPTZ: "TIMESTAMP",
         exp.DType.DATETIME: "TIMESTAMP",
+        # UUID is not a native Db2 type, use CHAR(36)
+        exp.DType.UUID: "CHAR(36)",
     }
 
     AFTER_HAVING_MODIFIER_TRANSFORMS = {
@@ -154,6 +156,47 @@ class Db2(generator.Generator):
         if count:
             return f" FETCH FIRST {self.sql(count)} ROWS ONLY"
         return " FETCH FIRST ROW ONLY"
+
+    def cast_sql(self, expression: exp.Cast, safe_prefix: t.Optional[str] = None) -> str:
+        """
+        Override cast_sql to handle UUID casts.
+        Since Db2 doesn't have native UUID type, we use CHAR(36).
+        When casting to UUID, we just return the value without the cast.
+        """
+        # Check if casting to UUID
+        to_type = expression.to
+        if isinstance(to_type, exp.DataType) and to_type.this == exp.DataType.Type.UUID:
+            # Just return the expression being cast, without the CAST
+            return self.sql(expression.this)
+
+        # For all other casts, use the default behavior
+        return super().cast_sql(expression, safe_prefix)
+
+    def columnconstraint_sql(self, expression: exp.ColumnConstraint) -> str:
+        """
+        Override columnconstraint_sql to handle UUID DEFAULT values.
+        
+        Db2 doesn't have native UUID generation functions like gen_random_uuid().
+        We remove the DEFAULT clause entirely when it contains UUID generation,
+        as there's no safe default value (e.g., '0' would cause primary key violations).
+        
+        Users must handle UUID generation via:
+        - Application code (generate UUID before INSERT)
+        - DB2 triggers (for database-side generation)
+        - Alternative approaches (sequences, etc.)
+        """
+        kind = expression.args.get("kind")
+
+        # Check if this is a DEFAULT constraint with UUID generation
+        if isinstance(kind, exp.DefaultColumnConstraint):
+            default_value = kind.this
+            # Check if the default is a Uuid() function call
+            if isinstance(default_value, exp.Uuid):
+                # Remove the DEFAULT constraint entirely
+                # Return empty string to skip this constraint
+                return ""
+
+        return super().columnconstraint_sql(expression)
 
     def boolean_sql(self, expression: exp.Boolean) -> str:
         return "1" if expression.this else "0"

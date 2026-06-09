@@ -380,6 +380,88 @@ class TestDB2(Validator):
         self.validate_identity("SELECT @var FROM SYSIBM.SYSDUMMY1")
         self.validate_identity("SET @var = 1")
 
+    def test_uuid_type_conversion(self):
+        """Test that PostgreSQL UUID type is converted to CHAR(36) in Db2"""
+        # CREATE TABLE with UUID column
+        self.validate_all(
+            "CREATE TABLE patients (patient_id UUID NOT NULL)",
+            write={
+                "db2": "CREATE TABLE patients (patient_id CHAR(36) NOT NULL)",
+            },
+        )
+
+        # CREATE TABLE with UUID and other types
+        self.validate_all(
+            "CREATE TABLE users (id UUID, name VARCHAR(100), created_at TIMESTAMP)",
+            write={
+                "db2": "CREATE TABLE users (id CHAR(36), name VARCHAR(100), created_at TIMESTAMP)",  # noqa: E501
+            },
+        )
+
+    def test_uuid_default_value(self):
+        """Test that gen_random_uuid() DEFAULT is removed in Db2
+        
+        Db2 doesn't have UUID generation functions. The DEFAULT clause is removed
+        to avoid issues with primary keys (a static default like '0' would cause
+        duplicate key violations). Users must handle UUID generation in their
+        application code or via DB2 triggers.
+        """
+        # CREATE TABLE with DEFAULT gen_random_uuid()
+        self.validate_all(
+            "CREATE TABLE patients (patient_id UUID DEFAULT gen_random_uuid() NOT NULL)",
+            write={
+                "db2": "CREATE TABLE patients (patient_id CHAR(36) NOT NULL)",
+            },
+        )
+
+        # CREATE TABLE with multiple columns including UUID with DEFAULT
+        self.validate_all(
+            """CREATE TABLE public.patients (
+                patient_id UUID DEFAULT gen_random_uuid() NOT NULL,
+                week_of_birth DATE NOT NULL,
+                CONSTRAINT patients_pk PRIMARY KEY (patient_id)
+            )""",
+            write={
+                "db2": "CREATE TABLE public.patients (patient_id CHAR(36) NOT NULL, week_of_birth DATE NOT NULL, CONSTRAINT patients_pk PRIMARY KEY (patient_id))",  # noqa: E501
+            },
+        )
+
+    def test_uuid_cast_removal(self):
+        """Test that CAST to UUID is removed in Db2 """
+        # Simple UUID cast in SELECT
+        self.validate_all(
+            "SELECT '550e8400-e29b-41d4-a716-446655440000'::UUID AS patient_id",
+            write={
+                "db2": "SELECT '550e8400-e29b-41d4-a716-446655440000' AS patient_id FROM SYSIBM.SYSDUMMY1",  # noqa: E501
+            },
+        )
+
+        # UUID cast in INSERT
+        self.validate_all(
+            "INSERT INTO patients (patient_id) VALUES ('8e4808ee-c1f3-4deb-a60a-71b7b8425b3b'::UUID)",  # noqa: E501
+            write={
+                "db2": "INSERT INTO patients (patient_id) VALUES ('8e4808ee-c1f3-4deb-a60a-71b7b8425b3b')",  # noqa: E501
+            },
+        )
+
+        # Multiple UUID casts in INSERT
+        self.validate_all(
+            """INSERT INTO patients (patient_id, week_of_birth) VALUES
+                ('8e4808ee-c1f3-4deb-a60a-71b7b8425b3b'::UUID, '2020-01-01'),
+                ('bd829f47-cd1e-4135-99b9-f24bd19a6934'::UUID, '2001-02-01')""",
+            write={
+                "db2": "INSERT INTO patients (patient_id, week_of_birth) VALUES ('8e4808ee-c1f3-4deb-a60a-71b7b8425b3b', '2020-01-01'), ('bd829f47-cd1e-4135-99b9-f24bd19a6934', '2001-02-01')",  # noqa: E501
+            },
+        )
+
+        # UUID cast in WHERE clause
+        self.validate_all(
+            "SELECT * FROM patients WHERE patient_id = '550e8400-e29b-41d4-a716-446655440000'::UUID",  # noqa: E501
+            write={
+                "db2": "SELECT * FROM patients WHERE patient_id = '550e8400-e29b-41d4-a716-446655440000'",  # noqa: E501
+            },
+        )
+
     def test_select_without_from(self):
         """Test that SELECT without FROM adds SYSIBM.SYSDUMMY1"""
         # Simple SELECT without FROM
