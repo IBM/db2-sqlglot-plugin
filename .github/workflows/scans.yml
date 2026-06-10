@@ -17,54 +17,6 @@ permissions:
 
 jobs:
 
-  mend:
-    name: Mend Dependency Scan
-    runs-on: ubuntu-latest
-
-    steps:
-      - name: Check out repository
-        uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: "3.11"
-
-      - name: Install project dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e .
-          if [ -f dev-requirements.txt ]; then
-            pip install -r dev-requirements.txt
-          fi
-
-      - name: Download Mend CLI
-        run: |
-          sudo curl https://downloads.mend.io/cli/linux_amd64/mend -o /usr/local/bin/mend
-          sudo chmod +x /usr/local/bin/mend
-
-      - name: Run Mend Scan
-        env:
-          MEND_USER_KEY: ${{ secrets.MEND_USER_KEY }}
-          MEND_EMAIL: ${{ secrets.MEND_EMAIL }}
-          MEND_URL: ${{ secrets.MEND_URL }}
-          MEND_ORGNAME: ${{ secrets.MEND_ORGNAME }}
-          MEND_PRODUCTNAME: ${{ secrets.MEND_PRODUCTNAME }}
-          MEND_PROJECTNAME: ${{ secrets.MEND_PROJECTNAME }}
-          MEND_REPORT: ${{ secrets.MEND_REPORT }}
-        run: |
-          mend dep --dir . --scope "$MEND_ORGNAME//$MEND_PRODUCTNAME//$MEND_PROJECTNAME" --export-results "$MEND_REPORT.json" --update
-
-      - name: Upload Mend scan report
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: mend-scan-report
-          path: ${{ secrets.MEND_REPORT }}.json
-          if-no-files-found: ignore
-
   pylint-scan:
     name: Pylint Code Quality
     runs-on: ubuntu-latest
