@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------------------#
 #                      DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY                       #
 #                                                                                                 #
 #  (C) COPYRIGHT International Business Machines Corp. 2026 All Rights Reserved             #
@@ -19,7 +19,7 @@
 #  above limitations or exclusions may not apply to you. IBM shall not be liable for any damages  #
 #  you suffer as a result of using, copying, modifying or distributing the Sample, even if IBM    #
 #  has been advised of the possibility of such damages.                                           #
-#-------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------------------#
 
 from __future__ import annotations
 
@@ -37,14 +37,12 @@ class Db2Parser(parser.Parser):
         "DAYOFYEAR": lambda args: exp.Extract(
             this=exp.var("DAYOFYEAR"), expression=seq_get(args, 0)
         ),
-        "POSSTR": lambda args: exp.StrPosition(
-            this=seq_get(args, 0), substr=seq_get(args, 1)
-        ),
+        "POSSTR": lambda args: exp.StrPosition(this=seq_get(args, 0), substr=seq_get(args, 1)),
         "VARCHAR_FORMAT": lambda args: exp.TimeToStr(
             this=seq_get(args, 0), format=seq_get(args, 1)
         ),
     }
-    
+
     # Map Db2-specific type keywords to their base types for parsing.
     # This allows the parser to recognize GRAPHIC, VARGRAPHIC, and DBCLOB as
     # valid types.

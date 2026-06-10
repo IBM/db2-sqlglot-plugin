@@ -4,8 +4,8 @@ A Db2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a power
 
 ## Requirements
 
-- **Python:** 3.9 or higher
-- **SQLGlot:** 30.0.0 or higher
+- **Python:** 3.10 or higher
+- **SQLGlot:** 30.9.0
 
 ## Features
 
@@ -147,11 +147,11 @@ This project includes two automated CI/CD workflows:
 1. **Unit Tests** (`.github/workflows/unit-tests.yml`)
    - **Triggers:** Push to main, Pull Requests, Manual dispatch
    - **Platforms:** Ubuntu, macOS, Windows
-   - **Python versions:** 3.9, 3.10, 3.11, 3.12
+   - **Python versions:** 3.10, 3.11, 3.12
    - **Features:**
      - Concurrency control (cancels outdated runs)
      - Unit tests with coverage reporting
-     - Code quality checks (black, isort, ruff)
+     - Code quality checks (ruff, flake8)
      - Codecov integration
 
 2. **Build and Publish Release** (`.github/workflows/build_release.yaml`)
@@ -241,6 +241,23 @@ pytest tests/
 pytest tests/ -v --cov=db2_sqlglot --cov-report=term --cov-report=html
 ```
 
+### Code Quality
+
+The project uses ruff for formatting and linting:
+
+```bash
+# Run formatting
+ruff format .
+
+# Run linting
+ruff check .
+
+# Run formatting and repository checks
+pre-commit run --all-files
+```
+
+Contributors should always run [`pre-commit run --all-files`](.pre-commit-config.yaml:1) before opening a pull request.
+
 ### Project Structure
 
 ```
@@ -260,7 +277,20 @@ db2-sqlglot-dialect/
 
 ## Contributing
 
-Contributions are welcome! Please feel free to submit a Pull Request.
+Contributions are welcome! Please:
+
+1. Fork the repository
+2. Create a feature branch
+3. Make your changes
+4. Add tests for new functionality
+5. Run [`pre-commit run --all-files`](.pre-commit-config.yaml:1)
+6. Ensure all tests pass and code passes linting
+7. Submit a pull request
+
+All pull requests will automatically run:
+- Linting checks (ruff, flake8)
+- Unit tests across multiple Python versions and platforms
+- Code quality validation
 
 ## Credits
 

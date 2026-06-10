@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------------------#
 #                      DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY                       #
 #                                                                                                 #
 #  (C) COPYRIGHT International Business Machines Corp. 2026 All Rights Reserved                  #
@@ -19,7 +19,7 @@
 #  above limitations or exclusions may not apply to you. IBM shall not be liable for any damages  #
 #  you suffer as a result of using, copying, modifying or distributing the Sample, even if IBM    #
 #  has been advised of the possibility of such damages.                                           #
-#-------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------------------#
 
 """
 Tests for Db2 SQLGlot dialect plugin.
@@ -57,9 +57,7 @@ class Validator(unittest.TestCase):
         )
         return expression
 
-    def validate_all(
-        self, sql, read=None, write=None, pretty=False, identify=False
-    ):
+    def validate_all(self, sql, read=None, write=None, pretty=False, identify=False):
         """
         Validate that:
         1. Everything in `read` transpiles to `sql`
@@ -116,9 +114,7 @@ class TestDB2(Validator):
         self.validate_identity("CREATE TABLE t (a DBCLOB)")
         self.validate_identity("CREATE TABLE t (a CLOB)")
         self.validate_identity("CREATE TABLE t (a CHAR(10), b GRAPHIC(10))")
-        self.validate_identity(
-            "CREATE TABLE t (a VARCHAR(100), b VARGRAPHIC(100))"
-        )
+        self.validate_identity("CREATE TABLE t (a VARCHAR(100), b VARGRAPHIC(100))")
 
         # Test FETCH FIRST syntax
         self.validate_identity("SELECT * FROM t FETCH FIRST 10 ROWS ONLY")
@@ -132,13 +128,13 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT CURRENT_DATE",
             write={
-                "db2": "SELECT CURRENT DATE",
+                "db2": "SELECT CURRENT DATE FROM SYSIBM.SYSDUMMY1",
             },
         )
         self.validate_all(
             "SELECT CURRENT_TIMESTAMP",
             write={
-                "db2": "SELECT CURRENT TIMESTAMP",
+                "db2": "SELECT CURRENT TIMESTAMP FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -150,7 +146,7 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT STRPOS(haystack, needle)",
             write={
-                "db2": "SELECT POSSTR(haystack, needle)",
+                "db2": "SELECT POSSTR(haystack, needle) FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -158,7 +154,7 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT TRUE, FALSE",
             write={
-                "db2": "SELECT 1, 0",
+                "db2": "SELECT 1, 0 FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -166,14 +162,14 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT EXTRACT(DAYOFWEEK FROM date_col)",
             write={
-                "db2": "SELECT DAYOFWEEK(date_col)",
+                "db2": "SELECT DAYOFWEEK(date_col) FROM SYSIBM.SYSDUMMY1",
             },
         )
 
         self.validate_all(
             "SELECT EXTRACT(DAYOFYEAR FROM date_col)",
             write={
-                "db2": "SELECT DAYOFYEAR(date_col)",
+                "db2": "SELECT DAYOFYEAR(date_col) FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -181,7 +177,7 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT TIME_TO_STR(timestamp_col, 'YYYY-MM-DD')",
             write={
-                "db2": "SELECT VARCHAR_FORMAT(timestamp_col, 'YYYY-MM-DD')",
+                "db2": "SELECT VARCHAR_FORMAT(timestamp_col, 'YYYY-MM-DD') FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -189,20 +185,14 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT DATEDIFF(date1, date2)",
             write={
-                "db2": "SELECT DAYS(date1) - DAYS(date2)",
+                "db2": "SELECT DAYS(date1) - DAYS(date2) FROM SYSIBM.SYSDUMMY1",
             },
         )
 
         # Test joins
-        self.validate_identity(
-            "SELECT * FROM t1 INNER JOIN t2 ON t1.id = t2.id"
-        )
-        self.validate_identity(
-            "SELECT * FROM t1 LEFT JOIN t2 ON t1.id = t2.id"
-        )
-        self.validate_identity(
-            "SELECT * FROM t1 RIGHT JOIN t2 ON t1.id = t2.id"
-        )
+        self.validate_identity("SELECT * FROM t1 INNER JOIN t2 ON t1.id = t2.id")
+        self.validate_identity("SELECT * FROM t1 LEFT JOIN t2 ON t1.id = t2.id")
+        self.validate_identity("SELECT * FROM t1 RIGHT JOIN t2 ON t1.id = t2.id")
 
         # Test subqueries
         self.validate_identity("SELECT * FROM (SELECT a, b FROM t1) AS subq")
@@ -214,9 +204,7 @@ class TestDB2(Validator):
         self.validate_identity("SELECT MIN(amount), MAX(amount) FROM t")
 
         # Test GROUP BY and HAVING
-        self.validate_identity(
-            "SELECT category, COUNT(*) FROM t GROUP BY category"
-        )
+        self.validate_identity("SELECT category, COUNT(*) FROM t GROUP BY category")
         self.validate_identity(
             "SELECT category, COUNT(*) FROM t GROUP BY category HAVING COUNT(*) > 5"
         )
@@ -227,9 +215,7 @@ class TestDB2(Validator):
         self.validate_identity("SELECT * FROM t ORDER BY a, b DESC")
 
         # Test CASE expressions
-        self.validate_identity(
-            "SELECT CASE WHEN a > 0 THEN 'positive' ELSE 'negative' END FROM t"
-        )
+        self.validate_identity("SELECT CASE WHEN a > 0 THEN 'positive' ELSE 'negative' END FROM t")
         self.validate_identity(
             "SELECT CASE a WHEN 1 THEN 'one' WHEN 2 THEN 'two' ELSE 'other' END FROM t"
         )
@@ -286,14 +272,14 @@ class TestDB2(Validator):
         self.validate_all(
             "SELECT MAX(a, b, c)",
             write={
-                "db2": "SELECT GREATEST(a, b, c)",
+                "db2": "SELECT GREATEST(a, b, c) FROM SYSIBM.SYSDUMMY1",
             },
         )
 
         self.validate_all(
             "SELECT MIN(a, b, c)",
             write={
-                "db2": "SELECT LEAST(a, b, c)",
+                "db2": "SELECT LEAST(a, b, c) FROM SYSIBM.SYSDUMMY1",
             },
         )
 
@@ -305,10 +291,12 @@ class TestDB2(Validator):
         self.validate_identity("SELECT * FROM t ORDER BY x DESC NULLS LAST")
 
     def test_typed_division(self):
-        self.validate_identity("SELECT 5 / 2")
+        self.validate_identity("SELECT 5 / 2 FROM SYSIBM.SYSDUMMY1")
         self.validate_identity("SELECT a / b FROM t")
-        self.validate_identity("SELECT 5.0 / 2.0")
-        self.validate_identity("SELECT CAST(5 AS DECIMAL) / CAST(2 AS DECIMAL)")
+        self.validate_identity("SELECT 5.0 / 2.0 FROM SYSIBM.SYSDUMMY1")
+        self.validate_identity(
+            "SELECT CAST(5 AS DECIMAL) / CAST(2 AS DECIMAL) FROM SYSIBM.SYSDUMMY1"
+        )
 
     def test_strip_modifiers(self):
         # Note: SQLGlot 30.x strips these Spark-specific modifiers when
@@ -375,8 +363,152 @@ class TestDB2(Validator):
         )
 
     def test_variable_tokens(self):
-        self.validate_identity("SELECT @var")
+        self.validate_identity("SELECT @var FROM SYSIBM.SYSDUMMY1")
         self.validate_identity("SET @var = 1")
+
+    def test_uuid_type_conversion(self):
+        """Test that PostgreSQL UUID type is converted to CHAR(36) in Db2"""
+        # CREATE TABLE with UUID column
+        self.validate_all(
+            "CREATE TABLE patients (patient_id UUID NOT NULL)",
+            write={
+                "db2": "CREATE TABLE patients (patient_id CHAR(36) NOT NULL)",
+            },
+        )
+
+        # CREATE TABLE with UUID and other types
+        self.validate_all(
+            "CREATE TABLE users (id UUID, name VARCHAR(100), created_at TIMESTAMP)",
+            write={
+                "db2": "CREATE TABLE users (id CHAR(36), name VARCHAR(100), created_at TIMESTAMP)",  # noqa: E501
+            },
+        )
+
+    def test_uuid_default_value(self):
+        """Test that gen_random_uuid() DEFAULT is removed in Db2
+        
+        Db2 doesn't have UUID generation functions. The DEFAULT clause is removed
+        to avoid issues with primary keys (a static default like '0' would cause
+        duplicate key violations). Users must handle UUID generation in their
+        application code or via DB2 triggers.
+        """
+        # CREATE TABLE with DEFAULT gen_random_uuid()
+        self.validate_all(
+            "CREATE TABLE patients (patient_id UUID DEFAULT gen_random_uuid() NOT NULL)",
+            write={
+                "db2": "CREATE TABLE patients (patient_id CHAR(36) NOT NULL)",
+            },
+        )
+
+        # CREATE TABLE with multiple columns including UUID with DEFAULT
+        self.validate_all(
+            """CREATE TABLE public.patients (
+                patient_id UUID DEFAULT gen_random_uuid() NOT NULL,
+                week_of_birth DATE NOT NULL,
+                CONSTRAINT patients_pk PRIMARY KEY (patient_id)
+            )""",
+            write={
+                "db2": "CREATE TABLE public.patients (patient_id CHAR(36) NOT NULL, week_of_birth DATE NOT NULL, CONSTRAINT patients_pk PRIMARY KEY (patient_id))",  # noqa: E501
+            },
+        )
+
+    def test_uuid_cast_removal(self):
+        """Test that CAST to UUID is removed in Db2 """
+        # Simple UUID cast in SELECT
+        self.validate_all(
+            "SELECT '550e8400-e29b-41d4-a716-446655440000'::UUID AS patient_id",
+            write={
+                "db2": "SELECT '550e8400-e29b-41d4-a716-446655440000' AS patient_id FROM SYSIBM.SYSDUMMY1",  # noqa: E501
+            },
+        )
+
+        # UUID cast in INSERT
+        self.validate_all(
+            "INSERT INTO patients (patient_id) VALUES ('8e4808ee-c1f3-4deb-a60a-71b7b8425b3b'::UUID)",  # noqa: E501
+            write={
+                "db2": "INSERT INTO patients (patient_id) VALUES ('8e4808ee-c1f3-4deb-a60a-71b7b8425b3b')",  # noqa: E501
+            },
+        )
+
+        # Multiple UUID casts in INSERT
+        self.validate_all(
+            """INSERT INTO patients (patient_id, week_of_birth) VALUES
+                ('8e4808ee-c1f3-4deb-a60a-71b7b8425b3b'::UUID, '2020-01-01'),
+                ('bd829f47-cd1e-4135-99b9-f24bd19a6934'::UUID, '2001-02-01')""",
+            write={
+                "db2": "INSERT INTO patients (patient_id, week_of_birth) VALUES ('8e4808ee-c1f3-4deb-a60a-71b7b8425b3b', '2020-01-01'), ('bd829f47-cd1e-4135-99b9-f24bd19a6934', '2001-02-01')",  # noqa: E501
+            },
+        )
+
+        # UUID cast in WHERE clause
+        self.validate_all(
+            "SELECT * FROM patients WHERE patient_id = '550e8400-e29b-41d4-a716-446655440000'::UUID",  # noqa: E501
+            write={
+                "db2": "SELECT * FROM patients WHERE patient_id = '550e8400-e29b-41d4-a716-446655440000'",  # noqa: E501
+            },
+        )
+
+    def test_select_without_from(self):
+        """Test that SELECT without FROM adds SYSIBM.SYSDUMMY1"""
+        # Simple SELECT without FROM
+        self.validate_all(
+            "SELECT 1",
+            write={
+                "db2": "SELECT 1 FROM SYSIBM.SYSDUMMY1",
+            },
+        )
+
+        # SELECT with expression without FROM
+        self.validate_all(
+            "SELECT 1 + 1",
+            write={
+                "db2": "SELECT 1 + 1 FROM SYSIBM.SYSDUMMY1",
+            },
+        )
+
+        # SELECT with function without FROM
+        self.validate_all(
+            "SELECT CURRENT_DATE",
+            write={
+                "db2": "SELECT CURRENT DATE FROM SYSIBM.SYSDUMMY1",
+            },
+        )
+
+        # SELECT with FROM should not add SYSIBM.SYSDUMMY1
+        self.validate_identity("SELECT * FROM users")
+        self.validate_identity("SELECT id, name FROM users")
+
+        # Subquery without FROM in outer query
+        self.validate_all(
+            "SELECT (SELECT COUNT(*) FROM users)",
+            write={
+                "db2": "SELECT (SELECT COUNT(*) FROM users) FROM SYSIBM.SYSDUMMY1",
+            },
+        )
+
+        # Subquery without FROM in inner query
+        self.validate_all(
+            "SELECT * FROM (SELECT 1) AS subq",
+            write={
+                "db2": "SELECT * FROM (SELECT 1 FROM SYSIBM.SYSDUMMY1) AS subq",
+            },
+        )
+
+        # Both outer and inner queries without FROM
+        self.validate_all(
+            "SELECT (SELECT 1)",
+            write={
+                "db2": "SELECT (SELECT 1 FROM SYSIBM.SYSDUMMY1) FROM SYSIBM.SYSDUMMY1",
+            },
+        )
+
+        # Nested subqueries with mixed FROM clauses
+        self.validate_all(
+            "SELECT * FROM (SELECT (SELECT 1) AS val FROM users) AS subq",
+            write={
+                "db2": "SELECT * FROM (SELECT (SELECT 1 FROM SYSIBM.SYSDUMMY1) AS val FROM users) AS subq",  # noqa: E501
+            },
+        )
 
 
 if __name__ == "__main__":

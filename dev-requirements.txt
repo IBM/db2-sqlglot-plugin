@@ -1,7 +1,10 @@
-black>=25.1.0,<26.0.0
+# Development dependencies
+# This file is kept for compatibility with traditional pip workflows
+# Source of truth: pyproject.toml (though dev deps may not be fully specified there)
+ruff==0.15.16
 flake8~=7.3
 mypy==1.6.0
-pytest>=8.0,<9.0
+pytest>=9.0.3
 pytest-cov~=6.0
 pre-commit~=3.5
 twine~=4.0

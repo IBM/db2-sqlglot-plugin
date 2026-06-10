@@ -1,4 +1,4 @@
-#-------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------------------#
 #                      DISCLAIMER OF WARRANTIES AND LIMITATION OF LIABILITY                       #
 #                                                                                                 #
 #  (C) COPYRIGHT International Business Machines Corp. 2026 All Rights Reserved             #
@@ -19,7 +19,7 @@
 #  above limitations or exclusions may not apply to you. IBM shall not be liable for any damages  #
 #  you suffer as a result of using, copying, modifying or distributing the Sample, even if IBM    #
 #  has been advised of the possibility of such damages.                                           #
-#-------------------------------------------------------------------------------------------------#
+# -------------------------------------------------------------------------------------------------#
 
 from __future__ import annotations
 
@@ -37,12 +37,28 @@ from sqlglot.dialects.dialect import (
 )
 
 
+def _add_sysibm_dual(expression: exp.Select) -> exp.Select:
+    """
+    Add SYSIBM.SYSDUMMY1 table for SELECT statements without FROM clause.
+    Db2 requires a FROM clause in SELECT statements.
+    """
+    # Note: SQLGlot uses 'from_' (with underscore) as the key for FROM clauses
+    if not expression.args.get("from_"):
+        expression.set(
+            "from_",
+            exp.From(
+                this=exp.Table(
+                    this=exp.Identifier(this="SYSDUMMY1"), db=exp.Identifier(this="SYSIBM")
+                )
+            ),
+        )
+    return expression
+
+
 def _date_add_sql(
     kind: str,
 ) -> t.Callable[[generator.Generator, exp.DateAdd | exp.DateSub], str]:
-    def func(
-        self: generator.Generator, expression: exp.DateAdd | exp.DateSub
-    ) -> str:
+    def func(self: generator.Generator, expression: exp.DateAdd | exp.DateSub) -> str:
         this = self.sql(expression, "this")
         unit = expression.args.get("unit")
         value = self._simplify_unless_literal(expression.expression)
@@ -83,6 +99,8 @@ class Db2(generator.Generator):
         exp.DType.NVARCHAR: "NVARCHAR",
         exp.DType.TIMESTAMPTZ: "TIMESTAMP",
         exp.DType.DATETIME: "TIMESTAMP",
+        # UUID is not a native Db2 type, use CHAR(36)
+        exp.DType.UUID: "CHAR(36)",
     }
 
     AFTER_HAVING_MODIFIER_TRANSFORMS = {
@@ -98,8 +116,7 @@ class Db2(generator.Generator):
         exp.DateAdd: _date_add_sql("+"),
         exp.DateSub: _date_add_sql("-"),
         exp.DateDiff: lambda self, e: (
-            f"{self.func('DAYS', e.this)} - "
-            f"{self.func('DAYS', e.expression)}"
+            f"{self.func('DAYS', e.this)} - {self.func('DAYS', e.expression)}"
         ),
         exp.CurrentDate: lambda self, e: "CURRENT DATE",
         exp.CurrentTimestamp: lambda self, e: "CURRENT TIMESTAMP",
@@ -107,13 +124,13 @@ class Db2(generator.Generator):
         exp.Max: max_or_greatest,
         exp.Min: min_or_least,
         exp.Pivot: no_pivot_sql,
-        exp.Select: transforms.preprocess([transforms.eliminate_distinct_on]),
+        exp.Select: transforms.preprocess([transforms.eliminate_distinct_on, _add_sysibm_dual]),
         exp.StrPosition: rename_func("POSSTR"),
         exp.TimeToStr: rename_func("VARCHAR_FORMAT"),
         exp.TryCast: no_trycast_sql,
         exp.Trim: trim_sql,
     }
-    
+
     # Note: Db2-specific types (GRAPHIC, VARGRAPHIC, DBCLOB) are automatically
     # handled by SQLGlot's default datatype_sql() when parsed as USERDEFINED
     # types. The 'kind' field preserves the original type name, so no custom
@@ -135,6 +152,47 @@ class Db2(generator.Generator):
         if count:
             return f" FETCH FIRST {self.sql(count)} ROWS ONLY"
         return " FETCH FIRST ROW ONLY"
+
+    def cast_sql(self, expression: exp.Cast, safe_prefix: t.Optional[str] = None) -> str:
+        """
+        Override cast_sql to handle UUID casts.
+        Since Db2 doesn't have native UUID type, we use CHAR(36).
+        When casting to UUID, we just return the value without the cast.
+        """
+        # Check if casting to UUID
+        to_type = expression.to
+        if isinstance(to_type, exp.DataType) and to_type.this == exp.DataType.Type.UUID:
+            # Just return the expression being cast, without the CAST
+            return self.sql(expression.this)
+
+        # For all other casts, use the default behavior
+        return super().cast_sql(expression, safe_prefix)
+
+    def columnconstraint_sql(self, expression: exp.ColumnConstraint) -> str:
+        """
+        Override columnconstraint_sql to handle UUID DEFAULT values.
+        
+        Db2 doesn't have native UUID generation functions like gen_random_uuid().
+        We remove the DEFAULT clause entirely when it contains UUID generation,
+        as there's no safe default value (e.g., '0' would cause primary key violations).
+        
+        Users must handle UUID generation via:
+        - Application code (generate UUID before INSERT)
+        - DB2 triggers (for database-side generation)
+        - Alternative approaches (sequences, etc.)
+        """
+        kind = expression.args.get("kind")
+
+        # Check if this is a DEFAULT constraint with UUID generation
+        if isinstance(kind, exp.DefaultColumnConstraint):
+            default_value = kind.this
+            # Check if the default is a Uuid() function call
+            if isinstance(default_value, exp.Uuid):
+                # Remove the DEFAULT constraint entirely
+                # Return empty string to skip this constraint
+                return ""
+
+        return super().columnconstraint_sql(expression)
 
     def boolean_sql(self, expression: exp.Boolean) -> str:
         return "1" if expression.this else "0"
