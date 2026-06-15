@@ -5,7 +5,7 @@
 #  Licensed Materials - Property of IBM                                                           #
 #                                                                                                 #
 #  US Government Users Restricted Rights - Use, duplication or disclosure restricted by GSA ADP   #
-#  Schedule Contract with IBM Corp.                                                               #
+#  Schedule Contract with IBM Corp                                                               #
 #                                                                                                 #
 #  The following source code ("Sample") is owned by International Business Machines Corporation   #
 #  or one of its subsidiaries ("IBM") and is copyrighted and licensed, not sold. You may use,     #

@@ -171,11 +171,11 @@ class Db2(generator.Generator):
     def columnconstraint_sql(self, expression: exp.ColumnConstraint) -> str:
         """
         Override columnconstraint_sql to handle UUID DEFAULT values.
-        
+
         Db2 doesn't have native UUID generation functions like gen_random_uuid().
         We remove the DEFAULT clause entirely when it contains UUID generation,
         as there's no safe default value (e.g., '0' would cause primary key violations).
-        
+
         Users must handle UUID generation via:
         - Application code (generate UUID before INSERT)
         - DB2 triggers (for database-side generation)

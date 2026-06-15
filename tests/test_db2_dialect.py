@@ -386,7 +386,7 @@ class TestDB2(Validator):
 
     def test_uuid_default_value(self):
         """Test that gen_random_uuid() DEFAULT is removed in Db2
-        
+
         Db2 doesn't have UUID generation functions. The DEFAULT clause is removed
         to avoid issues with primary keys (a static default like '0' would cause
         duplicate key violations). Users must handle UUID generation in their
@@ -413,7 +413,7 @@ class TestDB2(Validator):
         )
 
     def test_uuid_cast_removal(self):
-        """Test that CAST to UUID is removed in Db2 """
+        """Test that CAST to UUID is removed in Db2"""
         # Simple UUID cast in SELECT
         self.validate_all(
             "SELECT '550e8400-e29b-41d4-a716-446655440000'::UUID AS patient_id",

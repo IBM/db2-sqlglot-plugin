@@ -18,18 +18,25 @@ A Db2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a power
 
 ## ✅ Test Results
 
-All tests passing: **6 tests, 28 subtests**
+All tests passing: **10 tests** with **87% code coverage**
 
 ```bash
 $ python3 -m pytest tests/test_db2_dialect.py -v
 ============================= test session starts ==============================
-tests/test_db2_dialect.py::TestDB2::test_db2 PASSED                      [ 16%]
-tests/test_db2_dialect.py::TestDB2::test_nchar_nvarchar_transpilation PASSED [ 33%]
-tests/test_db2_dialect.py::TestDB2::test_null_ordering PASSED            [ 50%]
-tests/test_db2_dialect.py::TestDB2::test_strip_modifiers PASSED          [ 66%]
-tests/test_db2_dialect.py::TestDB2::test_typed_division PASSED           [ 83%]
-tests/test_db2_dialect.py::TestDB2::test_variable_tokens PASSED          [100%]
-==================== 6 passed, 28 subtests passed in 0.28s =====================
+tests/test_db2_dialect.py ..........                                     [100%]
+============================== 10 passed in 0.09s ==============================
+```
+
+**Code Coverage:**
+```
+Name                       Stmts   Miss  Cover
+----------------------------------------------
+db2_sqlglot/__init__.py        8      2    75%
+db2_sqlglot/dialect.py        13      0   100%
+db2_sqlglot/generator.py      57      9    84%
+db2_sqlglot/parser.py          6      0   100%
+----------------------------------------------
+TOTAL                         84     11    87%
 ```
 
 ### Test Coverage
@@ -61,7 +68,7 @@ cd db2-sqlglot-dialect
 pip install -e .
 ```
 
-### From PyPI (Once Published)
+### From PyPI
 
 ```bash
 pip install db2-sqlglot-dialect
