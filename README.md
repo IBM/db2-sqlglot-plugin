@@ -5,7 +5,7 @@ A Db2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a power
 ## Requirements
 
 - **Python:** 3.10 or higher
-- **SQLGlot:** 30.9.0
+- **SQLGlot:** 30.8.0 - 30.9.x (compatible with SQLMesh and other tools using SQLGlot 30.8.0)
 
 ## Features
 
