@@ -163,13 +163,14 @@ This project includes two automated CI/CD workflows:
 
 2. **Build and Publish Release** (`.github/workflows/build_release.yaml`)
    - **Triggers:**
-     - Version tag push (for example, `v1.0.1`)
+     - Version tag push (e.g., `v1.0.1`) - **Publishes to Test PyPI only**
      - Manual workflow dispatch (with choice: Test PyPI or PyPI, plus optional ref)
    - **Features:**
-     - Authorized release gating
+     - Authorized release gating (only ShubhamKapoor992 and amitkumar293)
      - Builds distribution packages (wheel + sdist)
      - Tests installation on multiple platforms before publish
-     - Publishes through GitHub environments (`test-pypi` / `pypi`)
+     - **Tag push**: Automatically publishes to Test PyPI for testing
+     - **Production release**: Requires manual workflow dispatch to publish to PyPI
      - Supports approval-gated publishing through environment protection rules
 
 ### Creating a Release
@@ -204,24 +205,32 @@ This triggers [`.github/workflows/build_release.yaml`](db2-sqlglot-dialect/.gith
    - **Git ref** → tag or branch (for example, `v1.0.1` or `main`)
 4. Click **"Run workflow"**
 
-#### Step 3: Approval and Publishing
+#### Step 3: What Happens Next
 
-The workflow:
-- checks that the triggering GitHub user is authorized
-- builds the package
-- validates it with `twine check`
-- tests wheel installation on supported platforms
-- waits for environment approval if configured for `test-pypi` or `pypi`
-- publishes to the selected package index
+**When you push a tag (e.g., `v1.0.1`):**
+1. Workflow checks authorization (only ShubhamKapoor992 and amitkumar293)
+2. Builds the package
+3. Validates with `twine check`
+4. Tests wheel installation on Ubuntu, macOS, Windows
+5. **Publishes to Test PyPI automatically** for testing
+
+**To publish to production PyPI:**
+1. Go to **Actions** tab → **Build and Publish Release**
+2. Click **"Run workflow"**
+3. Select:
+   - **Where to publish?** → `pypi`
+   - **Git ref** → tag (e.g., `v1.0.1`)
+4. Click **"Run workflow"**
+5. Approve if environment protection is configured
 
 #### Step 4: Verify Installation
 
-For Test PyPI:
+**Test PyPI** (after tag push):
 ```bash
 pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ db2-sqlglot-dialect
 ```
 
-For PyPI:
+**Production PyPI** (after manual release):
 ```bash
 pip install db2-sqlglot-dialect
 ```
