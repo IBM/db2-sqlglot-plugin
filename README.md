@@ -361,6 +361,12 @@ All pull requests will automatically run:
 - Unit tests across multiple Python versions and platforms
 - Code quality validation
 
+## Support
+
+For issues and questions:
+
+- **GitHub Issues**: [https://github.com/IBM/db2-sqlglot-plugin/issues](https://github.com/IBM/db2-sqlglot-plugin/issues)
+
 ## Credits
 
 Built on top of [SQLGlot](https://github.com/tobymao/sqlglot) by Toby Mao.
