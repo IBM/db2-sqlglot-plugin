@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "db2-sqlglot-dialect"
-version = "1.0.0"
+version = "1.2.0"
 description = "Db2 dialect plugin for SQLGlot"
 authors = [
     {name = "Shubham Kapoor", email = "shubham.kapoor992@gmail.com"}
