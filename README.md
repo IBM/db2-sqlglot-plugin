@@ -15,16 +15,18 @@ A Db2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a power
 - Db2-specific functions (POSSTR, VARCHAR_FORMAT, DAYOFWEEK, DAYOFYEAR)
 - FETCH FIRST syntax support
 - NULL ordering support
+- **Window functions**: Full support for RANK, DENSE_RANK, PERCENT_RANK, ROW_NUMBER, PARTITION BY
+- **SQLMesh compatibility**: Automatic conversion of SQLMesh-specific functions (DATE_STR_TO_DATE, TIME_STR_TO_TIME, StrToTime) for SEED model support
 
 ## ✅ Test Results
 
-All tests passing: **10 tests** with **87% code coverage**
+All tests passing: **12 tests** with **87% code coverage**
 
 ```bash
 $ python3 -m pytest tests/test_db2_dialect.py -v
 ============================= test session starts ==============================
-tests/test_db2_dialect.py ..........                                     [100%]
-============================== 10 passed in 0.09s ==============================
+tests/test_db2_dialect.py ............                                   [100%]
+============================== 12 passed in 0.12s ==============================
 ```
 
 **Code Coverage:**
@@ -58,6 +60,7 @@ The test suite validates:
 - ✅ **Set operations**: UNION, UNION ALL
 - ✅ **Variable tokens**: @var syntax
 - ✅ **Typed division**: Proper numeric division handling
+- ✅ **SQLMesh compatibility**: DATE_STR_TO_DATE, TIME_STR_TO_TIME, StrToTime function conversions
 
 ## Installation
 
@@ -144,6 +147,56 @@ When transpiling from other databases to Db2:
 - NULL ordering (`NULLS FIRST`, `NULLS LAST`)
 - Typed division
 - Variable tokens (`@var`)
+
+### Window Functions
+
+Full support for SQL window functions commonly used in analytics and data transformation:
+
+- **RANK()** - Assigns a rank to each row within a partition
+- **DENSE_RANK()** - Like RANK() but without gaps in ranking
+- **PERCENT_RANK()** - Relative rank of a row within a partition
+- **ROW_NUMBER()** - Sequential number for each row
+- **PARTITION BY** - Divides result set into partitions
+- **ORDER BY** - Defines ordering within window
+
+**Example:**
+```sql
+-- SQLMesh model with window functions
+SELECT
+    customer_id,
+    total_revenue,
+    RANK() OVER (ORDER BY total_revenue DESC) AS revenue_rank,
+    DENSE_RANK() OVER (ORDER BY total_revenue DESC) AS dense_rank,
+    PERCENT_RANK() OVER (ORDER BY total_revenue DESC) AS percent_rank
+FROM customer_stats
+```
+
+All window functions work seamlessly with Db2 and are fully compatible with SQLMesh models.
+
+### SQLMesh Integration
+
+This dialect includes full support for [SQLMesh](https://sqlmesh.com/):
+
+**SEED Models:**
+- **DATE_STR_TO_DATE()** → Automatically converted to Db2's `DATE()` function
+- **TIME_STR_TO_TIME()** → Automatically converted to Db2's `TIME()` function
+- **StrToTime()** → Automatically converted to Db2's `TIMESTAMP()` function
+
+**Analytics Models:**
+- Full window function support (RANK, DENSE_RANK, PERCENT_RANK, ROW_NUMBER)
+- CTE (Common Table Expressions) support
+- Complex aggregations with GROUP BY
+
+These features enable SQLMesh to work seamlessly with Db2 for both data loading (SEED models) and transformation (analytics models).
+
+**Example:**
+```python
+# SQLMesh generates this for SEED models:
+SELECT DATE_STR_TO_DATE('2024-01-15') FROM table
+
+# Automatically transpiled to Db2:
+SELECT DATE('2024-01-15') FROM table
+```
 
 ## CI/CD
 

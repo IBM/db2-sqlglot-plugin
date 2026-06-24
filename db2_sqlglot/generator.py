@@ -82,6 +82,11 @@ class Db2(generator.Generator):
     NVL2_SUPPORTED = False
     LAST_DAY_SUPPORTS_DATE_PART = False
 
+    # Db2 normalizes unquoted identifiers to uppercase
+    # So we should not quote identifiers by default
+    NORMALIZE_FUNCTIONS = "upper"
+    IDENTIFIERS_CAN_START_WITH_DIGIT = True
+
     CONCAT_COALESCE = True
 
     TYPE_MAPPING = {
@@ -118,6 +123,7 @@ class Db2(generator.Generator):
         exp.DateDiff: lambda self, e: (
             f"{self.func('DAYS', e.this)} - {self.func('DAYS', e.expression)}"
         ),
+        exp.DateStrToDate: lambda self, e: f"DATE({self.sql(e, 'this')})",
         exp.CurrentDate: lambda self, e: "CURRENT DATE",
         exp.CurrentTimestamp: lambda self, e: "CURRENT TIMESTAMP",
         exp.ILike: no_ilike_sql,
@@ -126,6 +132,8 @@ class Db2(generator.Generator):
         exp.Pivot: no_pivot_sql,
         exp.Select: transforms.preprocess([transforms.eliminate_distinct_on, _add_sysibm_dual]),
         exp.StrPosition: rename_func("POSSTR"),
+        exp.StrToTime: lambda self, e: f"TIMESTAMP({self.sql(e, 'this')})",
+        exp.TimeStrToTime: lambda self, e: f"TIME({self.sql(e, 'this')})",
         exp.TimeToStr: rename_func("VARCHAR_FORMAT"),
         exp.TryCast: no_trycast_sql,
         exp.Trim: trim_sql,

@@ -33,6 +33,8 @@ from db2_sqlglot.parser import Db2Parser
 class Db2(Dialect):
     NULL_ORDERING = "nulls_are_large"
     TYPED_DIVISION = True
+    NORMALIZE_FUNCTIONS = "upper"  # Db2 normalizes unquoted function names to uppercase
+    NORMALIZATION_STRATEGY = "UPPERCASE"  # Db2 normalizes unquoted identifiers to UPPERCASE
 
     # Time format mappings for Db2
     # https://www.ibm.com/docs/en/db2/11.5?topic=functions-timestamp-format

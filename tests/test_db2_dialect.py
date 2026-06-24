@@ -510,6 +510,36 @@ class TestDB2(Validator):
             },
         )
 
+    def test_date_str_to_date(self):
+        """Test DATE_STR_TO_DATE function conversion for SQLMesh compatibility."""
+        self.validate_all(
+            "SELECT DATE_STR_TO_DATE('2024-01-15')",
+            write={
+                "db2": "SELECT DATE('2024-01-15') FROM SYSIBM.SYSDUMMY1",
+            },
+        )
+        self.validate_all(
+            "SELECT DATE_STR_TO_DATE(order_date) FROM orders",
+            write={
+                "db2": "SELECT DATE(order_date) FROM orders",
+            },
+        )
+
+    def test_time_str_to_time(self):
+        """Test TIME_STR_TO_TIME function conversion for SQLMesh compatibility."""
+        self.validate_all(
+            "SELECT TIME_STR_TO_TIME('14:30:00')",
+            write={
+                "db2": "SELECT TIME('14:30:00') FROM SYSIBM.SYSDUMMY1",
+            },
+        )
+        self.validate_all(
+            "SELECT TIME_STR_TO_TIME(order_time) FROM orders",
+            write={
+                "db2": "SELECT TIME(order_time) FROM orders",
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
