@@ -186,7 +186,7 @@ class Db2(generator.Generator):
 
         Users must handle UUID generation via:
         - Application code (generate UUID before INSERT)
-        - DB2 triggers (for database-side generation)
+        - Db2 triggers (for database-side generation)
         - Alternative approaches (sequences, etc.)
         """
         kind = expression.args.get("kind")

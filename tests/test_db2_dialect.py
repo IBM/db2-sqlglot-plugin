@@ -90,7 +90,7 @@ class Validator(unittest.TestCase):
                 )
 
 
-class TestDB2(Validator):
+class TestDb2(Validator):
     """Test suite for Db2 dialect."""
 
     dialect = "db2"
@@ -390,7 +390,7 @@ class TestDB2(Validator):
         Db2 doesn't have UUID generation functions. The DEFAULT clause is removed
         to avoid issues with primary keys (a static default like '0' would cause
         duplicate key violations). Users must handle UUID generation in their
-        application code or via DB2 triggers.
+        application code or via Db2 triggers.
         """
         # CREATE TABLE with DEFAULT gen_random_uuid()
         self.validate_all(
