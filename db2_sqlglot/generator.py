@@ -92,20 +92,20 @@ class Db2(generator.Generator):
     TYPE_MAPPING = {
         **generator.Generator.TYPE_MAPPING,
         # Db2 has native BOOLEAN type (since Db2 11.1)
-        exp.DataType.Type.BOOLEAN: "BOOLEAN",
+        exp.DType.BOOLEAN: "BOOLEAN",
         # Db2 uses INTEGER, not INT
-        exp.DataType.Type.INT: "INTEGER",
+        exp.DType.INT: "INTEGER",
         # Other type mappings
-        exp.DataType.Type.TINYINT: "SMALLINT",
-        exp.DataType.Type.BINARY: "BLOB",
-        exp.DataType.Type.VARBINARY: "BLOB",
-        exp.DataType.Type.TEXT: "CLOB",
-        exp.DataType.Type.NCHAR: "NCHAR",
-        exp.DataType.Type.NVARCHAR: "NVARCHAR",
-        exp.DataType.Type.TIMESTAMPTZ: "TIMESTAMP",
-        exp.DataType.Type.DATETIME: "TIMESTAMP",
+        exp.DType.TINYINT: "SMALLINT",
+        exp.DType.BINARY: "BLOB",
+        exp.DType.VARBINARY: "BLOB",
+        exp.DType.TEXT: "CLOB",
+        exp.DType.NCHAR: "NCHAR",
+        exp.DType.NVARCHAR: "NVARCHAR",
+        exp.DType.TIMESTAMPTZ: "TIMESTAMP",
+        exp.DType.DATETIME: "TIMESTAMP",
         # UUID is not a native Db2 type, use CHAR(36)
-        exp.DataType.Type.UUID: "CHAR(36)",
+        exp.DType.UUID: "CHAR(36)",
     }
 
     AFTER_HAVING_MODIFIER_TRANSFORMS = {
