@@ -30,3 +30,6 @@ Thumbs.db
 
 # GitHub Actions
 .github/workflows/*.log
+
+# Local working notes
+CHANGES_TRACKING.md
