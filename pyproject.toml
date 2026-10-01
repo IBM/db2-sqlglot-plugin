@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "db2-sqlglot-dialect"
-version = "1.1.0"
+version = "1.2.0"
 description = "Db2 dialect plugin for SQLGlot"
 authors = [
     {name = "Shubham Kapoor", email = "shubham.kapoor992@gmail.com"}
@@ -13,7 +13,7 @@ readme = "README.md"
 license = "Apache-2.0"
 requires-python = ">=3.10"
 dependencies = [
-    "sqlglot>=30.8.0,<30.10.0",
+    "sqlglot>=30.8.0",
 ]
 classifiers = [
     "Programming Language :: Python :: 3",
