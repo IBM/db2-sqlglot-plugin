@@ -5,13 +5,13 @@ A Db2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a power
 ## Requirements
 
 - **Python:** 3.10 - 3.12
-- **SQLGlot:** 30.8.0 - 30.9.x (compatible with SQLMesh and other tools using SQLGlot 30.8.0)
+- **SQLGlot:** >=30.8.0
 
 ## Features
 
 - Full Db2 SQL syntax support
 - Cross-dialect transpilation (Db2 ↔ PostgreSQL, MySQL, Snowflake, etc.)
-- Type mapping (BOOLEAN → SMALLINT, NCHAR/NVARCHAR support, etc.)
+- Type mapping (INT → INTEGER, TINYINT → SMALLINT, NCHAR/NVARCHAR support, etc.)
 - Db2-specific functions (POSSTR, VARCHAR_FORMAT, DAYOFWEEK, DAYOFYEAR)
 - FETCH FIRST syntax support
 - NULL ordering support
@@ -20,13 +20,13 @@ A Db2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a power
 
 ## ✅ Test Results
 
-All tests passing: **12 tests** with **87% code coverage**
+All tests passing: **13 tests** with **88% code coverage**
 
 ```bash
 $ python3 -m pytest tests/test_db2_dialect.py -v
 ============================= test session starts ==============================
-tests/test_db2_dialect.py ............                                   [100%]
-============================== 12 passed in 0.12s ==============================
+tests/test_db2_dialect.py .............                                  [100%]
+============================== 13 passed in 0.15s ==============================
 ```
 
 **Code Coverage:**
@@ -34,11 +34,11 @@ tests/test_db2_dialect.py ............                                   [100%]
 Name                       Stmts   Miss  Cover
 ----------------------------------------------
 db2_sqlglot/__init__.py        8      2    75%
-db2_sqlglot/dialect.py        13      0   100%
-db2_sqlglot/generator.py      57      9    84%
+db2_sqlglot/dialect.py        15      0   100%
+db2_sqlglot/generator.py      59      9    85%
 db2_sqlglot/parser.py          6      0   100%
 ----------------------------------------------
-TOTAL                         84     11    87%
+TOTAL                         88     11    88%
 ```
 
 ### Test Coverage
@@ -61,6 +61,7 @@ The test suite validates:
 - ✅ **Variable tokens**: @var syntax
 - ✅ **Typed division**: Proper numeric division handling
 - ✅ **SQLMesh compatibility**: DATE_STR_TO_DATE, TIME_STR_TO_TIME, StrToTime function conversions
+- ✅ **Spark transpilation**: LIMIT→FETCH FIRST, type mapping, ILIKE, TRY_CAST, window functions, modifier stripping
 
 ## Installation
 
@@ -231,10 +232,10 @@ This project includes two automated CI/CD workflows:
 #### Step 1: Update Version
 ```bash
 # Edit pyproject.toml
-version = "1.0.1"
+version = "1.2.0"
 
 # Commit and push
-git commit -am "Bump version to 1.0.1"
+git commit -am "Bump version to 1.2.0"
 git push origin main
 ```
 
@@ -244,8 +245,8 @@ You can trigger the release workflow in either of these ways:
 
 ##### Option A: Push a Version Tag
 ```bash
-git tag v1.0.1
-git push origin v1.0.1
+git tag v1.2.0
+git push origin v1.2.0
 ```
 
 This triggers [`.github/workflows/build_release.yaml`](db2-sqlglot-dialect/.github/workflows/build_release.yaml).
@@ -260,7 +261,7 @@ This triggers [`.github/workflows/build_release.yaml`](db2-sqlglot-dialect/.gith
 
 #### Step 3: What Happens Next
 
-**When you push a tag (e.g., `v1.0.1`):**
+**When you push a tag (e.g., `v1.2.0`):**
 1. Workflow checks authorization (only ShubhamKapoor992 and amitkumar293)
 2. Builds the package
 3. Validates with `twine check`
@@ -272,7 +273,7 @@ This triggers [`.github/workflows/build_release.yaml`](db2-sqlglot-dialect/.gith
 2. Click **"Run workflow"**
 3. Select:
    - **Where to publish?** → `pypi`
-   - **Git ref** → tag (e.g., `v1.0.1`)
+   - **Git ref** → tag (e.g., `v1.2.0`)
 4. Click **"Run workflow"**
 5. Approve if environment protection is configured
 
