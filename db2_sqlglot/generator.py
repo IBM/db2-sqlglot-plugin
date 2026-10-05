@@ -89,6 +89,13 @@ class Db2(generator.Generator):
 
     CONCAT_COALESCE = True
 
+    # Db2 uses 'VALUE' keyword between key and value in JSON_OBJECT (SQL standard).
+    # sqlglot's default is ':' (SQL Server style) which is invalid in Db2.
+    # The leading space is required because the base generator concatenates the
+    # separator directly onto the key with no gap, so " VALUE" produces the
+    # correct Db2 syntax: 'key' VALUE value
+    JSON_KEY_VALUE_PAIR_SEP = " VALUE"
+
     TYPE_MAPPING = {
         **generator.Generator.TYPE_MAPPING,
         # Db2 has native BOOLEAN type (since Db2 11.1)
