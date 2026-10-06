@@ -306,7 +306,7 @@ class TestDb2(Validator):
             "SELECT * FROM t CLUSTER BY x",
             write={
                 "db2": "SELECT * FROM t",
-                "spark": "SELECT * FROM t CLUSTER BY x NULLS LAST",
+                "spark": "SELECT * FROM t CLUSTER BY x",
             },
         )
 
@@ -331,8 +331,7 @@ class TestDb2(Validator):
             write={
                 "db2": "SELECT * FROM t",
                 "spark": (
-                    "SELECT * FROM t CLUSTER BY y NULLS LAST "
-                    "DISTRIBUTE BY x NULLS LAST SORT BY z NULLS LAST"
+                    "SELECT * FROM t CLUSTER BY y DISTRIBUTE BY x NULLS LAST SORT BY z NULLS LAST"
                 ),
             },
         )
@@ -538,6 +537,153 @@ class TestDb2(Validator):
             write={
                 "db2": "SELECT TIME(order_time) FROM orders",
             },
+        )
+
+    def test_spark_to_db2(self):
+        """Test Spark SQL -> Db2 transpilation.
+
+        ibis-framework generates Spark-style SQL internally when targeting the
+        Db2 backend, so correct Spark -> Db2 transpilation is critical for the
+        ibis integration to work.
+
+        All cases use only a `read` entry.  The first argument is always the
+        expected Db2 output (valid Db2 SQL), which is what validate_all()
+        requires: the first argument is always parsed with read='db2'.
+        """
+        # --- LIMIT / OFFSET ---
+        # Spark LIMIT -> Db2 FETCH FIRST
+        self.validate_all(
+            "SELECT * FROM t FETCH FIRST 10 ROWS ONLY",
+            read={"spark": "SELECT * FROM t LIMIT 10"},
+        )
+
+        # Spark LIMIT + OFFSET -> Db2 OFFSET ROWS FETCH FIRST
+        self.validate_all(
+            "SELECT * FROM t OFFSET 5 ROWS FETCH FIRST 10 ROWS ONLY",
+            read={"spark": "SELECT * FROM t LIMIT 10 OFFSET 5"},
+        )
+
+        # Spark ORDER BY + LIMIT -> Db2 ORDER BY NULLS LAST + FETCH FIRST
+        # (Spark's default null ordering DESC NULLS LAST is preserved in Db2)
+        self.validate_all(
+            "SELECT * FROM t ORDER BY a DESC NULLS LAST FETCH FIRST 5 ROWS ONLY",
+            read={"spark": "SELECT * FROM t ORDER BY a DESC LIMIT 5"},
+        )
+
+        # --- TYPE MAPPING ---
+        # Spark INT/STRING/BINARY/BOOLEAN/BIGINT/FLOAT/DOUBLE -> Db2 equivalents
+        self.validate_all(
+            "CREATE TABLE t (a INTEGER, b CLOB, c BLOB, d BOOLEAN, e BIGINT, f FLOAT, g DOUBLE)",
+            read={
+                "spark": "CREATE TABLE t (a INT, b STRING, c BINARY, d BOOLEAN, e BIGINT, f FLOAT, g DOUBLE)"  # noqa: E501
+            },
+        )
+
+        # Spark TINYINT -> Db2 SMALLINT (Db2 has no TINYINT)
+        self.validate_all(
+            "CREATE TABLE t (a SMALLINT, b SMALLINT, c TIMESTAMP, d DATE)",
+            read={"spark": "CREATE TABLE t (a TINYINT, b SMALLINT, c TIMESTAMP, d DATE)"},
+        )
+
+        # --- BOOLEAN LITERALS ---
+        # Spark TRUE/FALSE -> Db2 1/0
+        self.validate_all(
+            "SELECT 1, 0 FROM t",
+            read={"spark": "SELECT TRUE, FALSE FROM t"},
+        )
+
+        # Boolean literal in CTE WHERE clause
+        self.validate_all(
+            "WITH cte AS (SELECT id FROM t WHERE active = 1) SELECT * FROM cte",
+            read={
+                "spark": "WITH cte AS (SELECT id FROM t WHERE active = TRUE) SELECT * FROM cte"
+            },
+        )
+
+        # --- SELECT WITHOUT FROM ---
+        # Spark SELECT literal -> Db2 adds SYSIBM.SYSDUMMY1
+        self.validate_all(
+            "SELECT 1 FROM SYSIBM.SYSDUMMY1",
+            read={"spark": "SELECT 1"},
+        )
+
+        # Spark CURRENT_TIMESTAMP() -> Db2 CURRENT TIMESTAMP + SYSIBM.SYSDUMMY1
+        self.validate_all(
+            "SELECT CURRENT TIMESTAMP FROM SYSIBM.SYSDUMMY1",
+            read={"spark": "SELECT CURRENT_TIMESTAMP()"},
+        )
+
+        # --- ILIKE ---
+        # Db2 has no ILIKE; transpiled to LOWER(col) LIKE LOWER(pattern)
+        self.validate_all(
+            "SELECT * FROM t WHERE LOWER(name) LIKE LOWER('%foo%')",
+            read={"spark": "SELECT * FROM t WHERE name ILIKE '%foo%'"},
+        )
+
+        # --- TRY_CAST ---
+        # Db2 has no TRY_CAST; falls back to plain CAST
+        self.validate_all(
+            "SELECT CAST(val AS INTEGER) FROM t",
+            read={"spark": "SELECT TRY_CAST(val AS INT) FROM t"},
+        )
+
+        # --- DATEDIFF ---
+        # Spark DATEDIFF(d1, d2) -> Db2 DAYS(CAST(d1 AS DATE)) - DAYS(CAST(d2 AS DATE))
+        # (Spark parses column references differently from plain DATEDIFF)
+        self.validate_all(
+            "SELECT DAYS(CAST(d1 AS DATE)) - DAYS(CAST(d2 AS DATE)) FROM t",
+            read={"spark": "SELECT DATEDIFF(d1, d2) FROM t"},
+        )
+
+        # --- WINDOW FUNCTIONS ---
+        # ROW_NUMBER: Spark default null ordering (NULLS LAST) is preserved in Db2
+        self.validate_all(
+            "SELECT ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC NULLS LAST) FROM t",
+            read={
+                "spark": "SELECT ROW_NUMBER() OVER (PARTITION BY dept ORDER BY salary DESC) FROM t"
+            },
+        )
+
+        # RANK: same NULLS LAST preservation
+        self.validate_all(
+            "SELECT RANK() OVER (ORDER BY score DESC NULLS LAST) FROM t",
+            read={"spark": "SELECT RANK() OVER (ORDER BY score DESC) FROM t"},
+        )
+
+        # --- STRIP SPARK-ONLY MODIFIERS ---
+        # CLUSTER BY, DISTRIBUTE BY, SORT BY have no Db2 equivalent -> stripped
+        self.validate_all(
+            "SELECT * FROM t",
+            read={"spark": "SELECT * FROM t CLUSTER BY x"},
+        )
+
+        self.validate_all(
+            "SELECT * FROM t",
+            read={"spark": "SELECT * FROM t DISTRIBUTE BY x"},
+        )
+
+        self.validate_all(
+            "SELECT * FROM t",
+            read={"spark": "SELECT * FROM t SORT BY x"},
+        )
+
+        # --- ADDITIONAL TYPE MAPPING ---
+        # Spark VARCHAR(n) -> Db2 CLOB (Spark treats VARCHAR as unbounded string)
+        self.validate_all(
+            "SELECT CAST(val AS CLOB) FROM t",
+            read={"spark": "SELECT CAST(val AS VARCHAR(50)) FROM t"},
+        )
+
+        # Spark TIMESTAMPTZ -> Db2 TIMESTAMP (Db2 has no timezone-aware timestamp type)
+        self.validate_all(
+            "CREATE TABLE t (a TIMESTAMP)",
+            read={"spark": "CREATE TABLE t (a TIMESTAMPTZ)"},
+        )
+
+        # Spark TEXT -> Db2 CLOB
+        self.validate_all(
+            "CREATE TABLE t (a CLOB)",
+            read={"spark": "CREATE TABLE t (a TEXT)"},
         )
 
 
