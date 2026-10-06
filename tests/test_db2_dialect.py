@@ -330,7 +330,9 @@ class TestDb2(Validator):
             "SELECT * FROM t CLUSTER BY y DISTRIBUTE BY x SORT BY z",
             write={
                 "db2": "SELECT * FROM t",
-                "spark": "SELECT * FROM t CLUSTER BY y DISTRIBUTE BY x NULLS LAST SORT BY z NULLS LAST",
+                "spark": (
+                    "SELECT * FROM t CLUSTER BY y DISTRIBUTE BY x NULLS LAST SORT BY z NULLS LAST"
+                ),
             },
         )
 
