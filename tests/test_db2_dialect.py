@@ -686,6 +686,32 @@ class TestDb2(Validator):
             read={"spark": "CREATE TABLE t (a TEXT)"},
         )
 
+    def test_json_object(self):
+        """Test that JSON_OBJECT uses 'VALUE' keyword, not colon (issue #24).
+
+        Db2 follows the SQL standard: JSON_OBJECT('key' VALUE expr).
+        sqlglot's default is ':' (SQL Server style) which is invalid in Db2.
+        The leading space in JSON_KEY_VALUE_PAIR_SEP = ' VALUE' is required
+        because the base generator appends the separator directly onto the key.
+        """
+        # Exact query from the issue report — Db2 round-trip
+        self.validate_identity(
+            "SELECT JSON_OBJECT('record_id' VALUE r.record_id) AS json_record "
+            "FROM records AS r "
+            "INNER JOIN record_types AS rt ON r.record_type_id = rt.record_type_id"
+        )
+
+        # Multiple key-value pairs
+        self.validate_identity(
+            "SELECT JSON_OBJECT('a' VALUE 1, 'b' VALUE 2) FROM SYSIBM.SYSDUMMY1"
+        )
+
+        # Transpile from T-SQL colon style into Db2 VALUE style
+        self.validate_all(
+            "SELECT JSON_OBJECT('key' VALUE val) FROM t",
+            read={"tsql": "SELECT JSON_OBJECT('key': val) FROM t"},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()

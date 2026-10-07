@@ -10,23 +10,24 @@ A Db2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a power
 ## Features
 
 - Full Db2 SQL syntax support
-- Cross-dialect transpilation (Db2 ↔ PostgreSQL, MySQL, Snowflake, etc.)
+- Cross-dialect transpilation (Db2 ↔ PostgreSQL, MySQL, Snowflake, Spark, T-SQL, etc.)
 - Type mapping (INT → INTEGER, TINYINT → SMALLINT, NCHAR/NVARCHAR support, etc.)
 - Db2-specific functions (POSSTR, VARCHAR_FORMAT, DAYOFWEEK, DAYOFYEAR)
 - FETCH FIRST syntax support
 - NULL ordering support
+- **JSON_OBJECT**: Correct `VALUE` keyword syntax (`'key' VALUE expr`) per SQL standard
 - **Window functions**: Full support for RANK, DENSE_RANK, PERCENT_RANK, ROW_NUMBER, PARTITION BY
 - **SQLMesh compatibility**: Automatic conversion of SQLMesh-specific functions (DATE_STR_TO_DATE, TIME_STR_TO_TIME, StrToTime) for SEED model support
 
 ## ✅ Test Results
 
-All tests passing: **13 tests** with **88% code coverage**
+All tests passing: **14 tests** with **88% code coverage**
 
 ```bash
 $ python3 -m pytest tests/test_db2_dialect.py -v
 ============================= test session starts ==============================
-tests/test_db2_dialect.py .............                                  [100%]
-============================== 13 passed in 0.15s ==============================
+tests/test_db2_dialect.py ..............                                 [100%]
+============================== 14 passed in 0.15s ==============================
 ```
 
 **Code Coverage:**
@@ -35,10 +36,10 @@ Name                       Stmts   Miss  Cover
 ----------------------------------------------
 db2_sqlglot/__init__.py        8      2    75%
 db2_sqlglot/dialect.py        15      0   100%
-db2_sqlglot/generator.py      59      9    85%
+db2_sqlglot/generator.py      60      9    85%
 db2_sqlglot/parser.py          6      0   100%
 ----------------------------------------------
-TOTAL                         88     11    88%
+TOTAL                         89     11    88%
 ```
 
 ### Test Coverage
@@ -62,6 +63,7 @@ The test suite validates:
 - ✅ **Typed division**: Proper numeric division handling
 - ✅ **SQLMesh compatibility**: DATE_STR_TO_DATE, TIME_STR_TO_TIME, StrToTime function conversions
 - ✅ **Spark transpilation**: LIMIT→FETCH FIRST, type mapping, ILIKE, TRY_CAST, window functions, modifier stripping
+- ✅ **JSON_OBJECT**: `'key' VALUE expr` syntax (SQL standard)
 
 ## Installation
 
