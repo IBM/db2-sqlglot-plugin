@@ -9,7 +9,7 @@ A Db2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a power
 
 ## Features
 
-- Full Db2 SQL syntax support
+- Full Db2 SQL syntax support.
 - Cross-dialect transpilation (Db2 ↔ PostgreSQL, MySQL, Snowflake, Spark, T-SQL, etc.)
 - Type mapping (INT → INTEGER, TINYINT → SMALLINT, NCHAR/NVARCHAR support, etc.)
 - Db2-specific functions (POSSTR, VARCHAR_FORMAT, DAYOFWEEK, DAYOFYEAR)
