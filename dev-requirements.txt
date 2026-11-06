@@ -9,4 +9,6 @@ pytest-cov~=6.0
 pre-commit~=3.5
 twine~=4.0
 wheel>=0.46.2
-pylint>=3.0,<4.0
+pylint>=4.0.9
+# Transitive (twine -> requests); pinned for fixes to CVE-2026-44431/44432/97687/97688/97689
+urllib3>=2.8.0
