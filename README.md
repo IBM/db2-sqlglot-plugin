@@ -18,16 +18,19 @@ A Db2 dialect plugin for [SQLGlot](https://github.com/tobymao/sqlglot) - a power
 - **JSON_OBJECT**: Correct `VALUE` keyword syntax (`'key' VALUE expr`) per SQL standard
 - **Window functions**: Full support for RANK, DENSE_RANK, PERCENT_RANK, ROW_NUMBER, PARTITION BY
 - **SQLMesh compatibility**: Automatic conversion of SQLMesh-specific functions (DATE_STR_TO_DATE, TIME_STR_TO_TIME, StrToTime) for SEED model support
+- **Special registers**: `CURRENT DATE`, `CURRENT TIME`, `CURRENT TIMESTAMP` (written with a space) parse anywhere in an expression
+- **Labeled durations**: `CURRENT DATE + 3 DAYS`, `ts - 2 HOURS`, `d + ? DAYS`, `(n + 1) MONTHS`; ANSI/PostgreSQL `INTERVAL` literals are written as labeled durations
+- **Temporal tables**: `FOR SYSTEM_TIME` and `FOR BUSINESS_TIME` with `AS OF`, `FROM ... TO` and `BETWEEN ... AND`
 
 ## ✅ Test Results
 
-All tests passing: **14 tests** with **88% code coverage**
+All tests passing: **17 tests** with **89% code coverage**
 
 ```bash
 $ python3 -m pytest tests/test_db2_dialect.py -v
 ============================= test session starts ==============================
-tests/test_db2_dialect.py ..............                                 [100%]
-============================== 14 passed in 0.15s ==============================
+tests/test_db2_dialect.py .................                              [100%]
+============================== 17 passed in 0.20s ==============================
 ```
 
 **Code Coverage:**
@@ -35,11 +38,11 @@ tests/test_db2_dialect.py ..............                                 [100%]
 Name                       Stmts   Miss  Cover
 ----------------------------------------------
 db2_sqlglot/__init__.py        8      2    75%
-db2_sqlglot/dialect.py        15      0   100%
-db2_sqlglot/generator.py      60      9    85%
-db2_sqlglot/parser.py          6      0   100%
+db2_sqlglot/dialect.py        17      0   100%
+db2_sqlglot/generator.py      89     12    87%
+db2_sqlglot/parser.py         25      1    96%
 ----------------------------------------------
-TOTAL                         89     11    88%
+TOTAL                        139     15    89%
 ```
 
 ### Test Coverage
@@ -49,7 +52,9 @@ The test suite validates:
 - ✅ **Type conversions**: INTEGER→INT, NCHAR→GRAPHIC, NVARCHAR→VARGRAPHIC, DBCLOB→CLOB
 - ✅ **Functions**: POSSTR, VARCHAR_FORMAT, DAYOFWEEK, DAYOFYEAR, GREATEST, LEAST
 - ✅ **Boolean handling**: TRUE/FALSE → 1/0
-- ✅ **Date/Time**: CURRENT DATE, CURRENT TIMESTAMP, DATEDIFF→DAYS
+- ✅ **Date/Time**: CURRENT DATE, CURRENT TIME, CURRENT TIMESTAMP, DATEDIFF→DAYS
+- ✅ **Labeled durations**: `+ 1 DAYS`, `- 2 HOURS`, `+ ? DAYS`, `(n + 1) MONTHS`, INTERVAL → labeled duration
+- ✅ **Temporal queries**: FOR SYSTEM_TIME / FOR BUSINESS_TIME with AS OF, FROM ... TO, BETWEEN ... AND
 - ✅ **FETCH FIRST**: Pagination with FETCH FIRST n ROWS ONLY
 - ✅ **OFFSET**: OFFSET n ROWS syntax
 - ✅ **NULL ordering**: NULLS FIRST, NULLS LAST

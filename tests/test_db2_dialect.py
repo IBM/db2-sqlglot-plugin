@@ -34,7 +34,7 @@ This test suite validates the Db2 dialect implementation including:
 
 import unittest
 
-from sqlglot import ErrorLevel, parse_one
+from sqlglot import ErrorLevel, exp, parse_one
 
 # Import the dialect to ensure it's registered
 from db2_sqlglot import Db2  # noqa: F401
@@ -710,6 +710,108 @@ class TestDb2(Validator):
         self.validate_all(
             "SELECT JSON_OBJECT('key' VALUE val) FROM t",
             read={"tsql": "SELECT JSON_OBJECT('key': val) FROM t"},
+        )
+
+    def test_special_registers(self):
+        """CURRENT DATE / CURRENT TIME / CURRENT TIMESTAMP, written with a space as in Db2.
+
+        Before, "SELECT CURRENT DATE" parsed as a column named CURRENT with the alias DATE and
+        was written back as "SELECT CURRENT AS DATE", and "WHERE d = CURRENT DATE" did not parse.
+        """
+        for sql, node in (
+            ("SELECT CURRENT DATE FROM SYSIBM.SYSDUMMY1", exp.CurrentDate),
+            ("SELECT CURRENT TIME FROM SYSIBM.SYSDUMMY1", exp.CurrentTime),
+            ("SELECT CURRENT TIMESTAMP FROM SYSIBM.SYSDUMMY1", exp.CurrentTimestamp),
+        ):
+            with self.subTest(sql):
+                self.assertIsInstance(self.validate_identity(sql).selects[0], node)
+
+        self.validate_identity("SELECT * FROM t WHERE d = CURRENT DATE")
+        self.validate_identity("SELECT * FROM t WHERE ts < CURRENT TIMESTAMP ORDER BY ts")
+        self.validate_identity("SELECT YEAR(CURRENT DATE) FROM SYSIBM.SYSDUMMY1")
+        # The underscore spelling is also valid Db2 and keeps working
+        self.validate_identity(
+            "SELECT CURRENT_DATE FROM SYSIBM.SYSDUMMY1",
+            "SELECT CURRENT DATE FROM SYSIBM.SYSDUMMY1",
+        )
+        # Other registers that merely start with the same words are not split up
+        self.assertIsNone(
+            self.parse_one("SELECT CURRENT TIMEZONE FROM SYSIBM.SYSDUMMY1").find(exp.CurrentTime)
+        )
+
+    def test_labeled_durations(self):
+        """Db2 date arithmetic uses labeled durations (expression DAYS, MONTHS, HOURS, ...).
+
+        Before, "d + 3 DAYS" in a SELECT list parsed as "d + 3 AS DAYS", and in a WHERE clause
+        "CURRENT DATE + 1 DAY" did not parse. ANSI INTERVAL literals were written as INTERVAL,
+        which Db2 does not support.
+        """
+        expression = self.validate_identity("SELECT check_in + 3 DAYS FROM r")
+        self.assertIsInstance(expression.selects[0].expression, exp.Interval)
+
+        self.validate_identity(
+            "SELECT * FROM t WHERE d BETWEEN CURRENT DATE - 7 DAYS AND CURRENT DATE"
+        )
+        self.validate_identity("SELECT * FROM t WHERE ts > CURRENT TIMESTAMP - 2 HOURS")
+        self.validate_identity("SELECT * FROM t WHERE d <= CURRENT DATE + ? DAYS")
+        self.validate_identity("SELECT * FROM t WHERE d <= CURRENT DATE + t.lead DAYS")
+        self.validate_identity("SELECT * FROM t WHERE d <= CURRENT DATE + (n + 1) DAYS")
+        self.validate_identity("SELECT 3 MONTHS + d FROM t")
+        self.validate_identity(
+            "SELECT * FROM t WHERE d = CURRENT DATE + 1 DAY",
+            "SELECT * FROM t WHERE d = CURRENT DATE + 1 DAYS",
+        )
+        self.validate_identity(
+            "SELECT d + 1 YEAR - 2 MONTHS + 30 MINUTE FROM t",
+            "SELECT d + 1 YEARS - 2 MONTHS + 30 MINUTES FROM t",
+        )
+        self.validate_identity("SELECT ts - 5 SECONDS - 10 MICROSECONDS FROM t")
+
+        # Unchanged: the DAYS() function, and a duration keyword used as a plain column alias
+        self.validate_identity("SELECT DAYS(check_out) - DAYS(check_in) AS nights FROM r")
+        self.validate_identity("SELECT 3 DAYS FROM t", "SELECT 3 AS DAYS FROM t")
+
+        # ANSI / PostgreSQL intervals become Db2 labeled durations
+        self.validate_all(
+            "SELECT CURRENT DATE + 7 DAYS FROM SYSIBM.SYSDUMMY1",
+            read={
+                "postgres": "SELECT CURRENT_DATE + INTERVAL '7 days'",
+                "snowflake": "SELECT CURRENT_DATE + INTERVAL '7 DAY'",
+            },
+        )
+        self.validate_all(
+            "SELECT ts - 2 HOURS FROM t",
+            read={"postgres": "SELECT ts - INTERVAL '2' HOUR FROM t"},
+        )
+
+    def test_temporal_queries(self):
+        """Db2 system-period and application-period (BUSINESS_TIME) temporal table queries.
+
+        Before, FOR SYSTEM_TIME was written back as "FOR TIMESTAMP AS OF", FROM ... TO as a
+        tuple, and FOR BUSINESS_TIME did not parse. All of these are invalid Db2.
+        """
+        self.validate_identity(
+            "SELECT rate FROM rate_plan FOR SYSTEM_TIME AS OF '2026-11-01-00.00.00'"
+        )
+        self.validate_identity(
+            "SELECT rate FROM rate_plan FOR SYSTEM_TIME FROM '2026-11-01' TO '2026-11-05'"
+        )
+        self.validate_identity(
+            "SELECT rate FROM rate_plan FOR SYSTEM_TIME BETWEEN '2026-11-01' AND '2026-11-05'"
+        )
+        self.validate_identity("SELECT * FROM promotions FOR BUSINESS_TIME AS OF '2026-11-21'")
+        self.validate_identity(
+            "SELECT * FROM promotions FOR BUSINESS_TIME FROM '2026-11-01' TO '2026-12-01' "
+            "WHERE id = 1"
+        )
+        self.validate_identity(
+            "SELECT p.rate FROM rate_plan FOR SYSTEM_TIME AS OF CURRENT TIMESTAMP - 1 DAYS AS p"
+        )
+
+        # SQL Server temporal syntax transpiles to the same Db2 statement
+        self.validate_all(
+            "SELECT * FROM t FOR SYSTEM_TIME AS OF '2026-11-01'",
+            read={"tsql": "SELECT * FROM t FOR SYSTEM_TIME AS OF '2026-11-01'"},
         )
 
 
