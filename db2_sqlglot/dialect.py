@@ -25,6 +25,7 @@ from __future__ import annotations
 
 from sqlglot import tokens
 from sqlglot.dialects.dialect import Dialect
+from sqlglot.tokens import TokenType
 
 from db2_sqlglot.generator import Db2 as Db2Generator
 from db2_sqlglot.parser import Db2Parser
@@ -62,6 +63,15 @@ class Db2(Dialect):
         # types. Let them be parsed as identifiers so we can preserve the
         # original type name. They will be handled in the parser and generator.
         VAR_SINGLE_TOKENS = {"@"}
+
+        KEYWORDS = {
+            **tokens.Tokenizer.KEYWORDS,
+            # Db2 special registers are written with a space. Without these entries,
+            # "CURRENT DATE" is read as a column named CURRENT aliased as DATE.
+            "CURRENT DATE": TokenType.CURRENT_DATE,
+            "CURRENT TIME": TokenType.CURRENT_TIME,
+            "CURRENT TIMESTAMP": TokenType.CURRENT_TIMESTAMP,
+        }
 
     Parser = Db2Parser
     Generator = Db2Generator

@@ -23,6 +23,7 @@
 
 from __future__ import annotations
 
+import re
 import typing as t
 
 from sqlglot import exp, generator, transforms
@@ -35,6 +36,16 @@ from sqlglot.dialects.dialect import (
     rename_func,
     trim_sql,
 )
+
+# Interval units that have a Db2 labeled duration, keyed by singular or plural spelling.
+_DURATION_UNIT_OF = {
+    f"{unit}{suffix}": unit
+    for unit in ("YEAR", "MONTH", "DAY", "HOUR", "MINUTE", "SECOND", "MICROSECOND")
+    for suffix in ("", "S")
+}
+_NUMBER = re.compile(r"-?\d+(\.\d+)?")
+# Operands a labeled duration accepts without parentheses (constant, column, host variable, ...)
+_DURATION_OPERANDS = (exp.Literal, exp.Column, exp.Placeholder, exp.Paren, exp.Func)
 
 
 def _add_sysibm_dual(expression: exp.Select) -> exp.Select:
@@ -132,6 +143,7 @@ class Db2(generator.Generator):
         ),
         exp.DateStrToDate: lambda self, e: f"DATE({self.sql(e, 'this')})",
         exp.CurrentDate: lambda self, e: "CURRENT DATE",
+        exp.CurrentTime: lambda self, e: "CURRENT TIME",
         exp.CurrentTimestamp: lambda self, e: "CURRENT TIMESTAMP",
         exp.ILike: no_ilike_sql,
         exp.Max: max_or_greatest,
@@ -167,6 +179,43 @@ class Db2(generator.Generator):
         if count:
             return f" FETCH FIRST {self.sql(count)} ROWS ONLY"
         return " FETCH FIRST ROW ONLY"
+
+    def interval_sql(self, expression: exp.Interval) -> str:
+        """Write an interval as a Db2 labeled duration: ``7 DAYS``, ``(n + 1) MONTHS``.
+
+        Db2 has no INTERVAL literal. Units without a labeled duration (WEEK, QUARTER, ...) and
+        non-numeric interval strings keep the default output.
+        """
+        unit = expression.args.get("unit")
+        value = expression.this
+        unit_name = unit.name.upper() if isinstance(unit, exp.Var) else ""
+        unit_name = _DURATION_UNIT_OF.get(unit_name, "")
+        if not unit_name or value is None:
+            return super().interval_sql(expression)
+
+        if isinstance(value, exp.Literal) and value.is_string:
+            if not _NUMBER.fullmatch(value.name.strip()):
+                return super().interval_sql(expression)
+            value = exp.Literal.number(value.name.strip())
+
+        value_sql = self.sql(value)
+        if not isinstance(value, _DURATION_OPERANDS) or value_sql.startswith("-"):
+            value_sql = f"({value_sql})"
+        return f"{value_sql} {unit_name}S"
+
+    def version_sql(self, expression: exp.Version) -> str:
+        """Db2 temporal queries: FOR SYSTEM_TIME / FOR BUSINESS_TIME ... AS OF, FROM ... TO,
+        BETWEEN ... AND. sqlglot stores SYSTEM_TIME as "TIMESTAMP" and FROM / BETWEEN bounds
+        as a tuple, neither of which is valid Db2."""
+        period = expression.name.upper()
+        period = "SYSTEM_TIME" if period == "TIMESTAMP" else period
+        kind = expression.text("kind").upper()
+        bounds = expression.expression
+        if kind in ("FROM", "BETWEEN") and isinstance(bounds, exp.Tuple):
+            if len(bounds.expressions) == 2:
+                start, end = (self.sql(e) for e in bounds.expressions)
+                return f"FOR {period} {kind} {start} {'TO' if kind == 'FROM' else 'AND'} {end}"
+        return f"FOR {period} {kind} {self.sql(expression, 'expression')}"
 
     def cast_sql(self, expression: exp.Cast, safe_prefix: t.Optional[str] = None) -> str:
         """
