@@ -146,6 +146,22 @@ class Db2(generator.Generator):
         exp.Trim: trim_sql,
     }
 
+    def isolation_modifier(self, expression: exp.Expression) -> str:
+        """
+        Generate the isolation-clause of a statement, if it has one.
+        """
+        isolation = self.sql(expression, "isolation")
+        return self.seg(f"WITH {isolation}") if isolation else ""
+
+    def query_modifiers(self, expression: exp.Expression, *sqls: str) -> str:
+        return f"{super().query_modifiers(expression, *sqls)}{self.isolation_modifier(expression)}"
+
+    def update_sql(self, expression: exp.Update) -> str:
+        return f"{super().update_sql(expression)}{self.isolation_modifier(expression)}"
+
+    def delete_sql(self, expression: exp.Delete) -> str:
+        return f"{super().delete_sql(expression)}{self.isolation_modifier(expression)}"
+
     # Note: Db2-specific types (GRAPHIC, VARGRAPHIC, DBCLOB) are automatically
     # handled by SQLGlot's default datatype_sql() when parsed as USERDEFINED
     # types. The 'kind' field preserves the original type name, so no custom

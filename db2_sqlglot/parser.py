@@ -23,8 +23,11 @@
 
 from __future__ import annotations
 
+import typing as t
+
 from sqlglot import exp, parser
 from sqlglot.helper import seq_get
+from sqlglot.tokens import TokenType
 
 
 class Db2Parser(parser.Parser):
@@ -50,3 +53,36 @@ class Db2Parser(parser.Parser):
         *parser.Parser.TYPE_TOKENS,
         # Db2-specific types will be parsed as DataType with the name preserved
     }
+
+    # The isolation-clause is kept in an arg of its own rather than in "options":
+    # other dialects write query options in their own syntax (T-SQL as OPTION(...)),
+    # and DELETE has no options.
+    QUERY_MODIFIER_PARSERS = {
+        **parser.Parser.QUERY_MODIFIER_PARSERS,
+        TokenType.WITH: lambda self: ("isolation", self._parse_isolation_clause()),
+    }
+
+    SET_OP_MODIFIERS = {*parser.Parser.SET_OP_MODIFIERS, "isolation"}
+
+    STATEMENT_PARSERS = {
+        **parser.Parser.STATEMENT_PARSERS,
+        TokenType.DELETE: lambda self: self._parse_isolation(self._parse_delete()),
+        TokenType.UPDATE: lambda self: self._parse_isolation(self._parse_update()),
+    }
+
+    def _parse_isolation(self, expression: exp.Expression) -> exp.Expression:
+        """
+        Parse the isolation-clause at the end of an UPDATE or DELETE statement.
+        """
+        expression.set("isolation", self._parse_isolation_clause())
+        return expression
+
+    def _parse_isolation_clause(self) -> t.Optional[exp.Var]:
+        """
+        Parse the isolation-clause WITH UR, WITH CS, WITH RR or WITH RS.
+        """
+        index = self._index
+        if self._match(TokenType.WITH) and self._match_texts(("UR", "CS", "RR", "RS")):
+            return exp.var(self._prev.text.upper())
+        self._retreat(index)
+        return None

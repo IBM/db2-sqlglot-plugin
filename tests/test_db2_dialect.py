@@ -712,6 +712,30 @@ class TestDb2(Validator):
             read={"tsql": "SELECT JSON_OBJECT('key': val) FROM t"},
         )
 
+    def test_isolation_clause(self):
+        """Test the isolation-clause WITH UR, WITH CS, WITH RR and WITH RS"""
+        self.validate_identity("SELECT * FROM t WHERE a = 1 WITH UR")
+        self.validate_identity("DELETE FROM t WHERE a = 1 WITH CS")
+        self.validate_identity("UPDATE t SET a = 2 WHERE a = 1 WITH RR")
+        self.validate_identity("INSERT INTO t (a) SELECT a FROM u WITH RS")
+        self.validate_identity("SELECT a FROM t UNION SELECT a FROM u WITH UR")
+        self.validate_identity("SELECT a FROM t UNION SELECT a FROM u ORDER BY a WITH UR")
+        self.validate_all(
+            "create table t2 as (select * from t) with no data",
+            write={"db2": "CREATE TABLE t2 AS (SELECT * FROM t) WITH NO DATA"},
+        )
+        self.validate_all(
+            "select * from t where a = 1 with ur",
+            write={
+                "db2": "SELECT * FROM t WHERE a = 1 WITH UR",
+                "mysql": "SELECT * FROM t WHERE a = 1",
+                "postgres": "SELECT * FROM t WHERE a = 1",
+                "snowflake": "SELECT * FROM t WHERE a = 1",
+                "spark": "SELECT * FROM t WHERE a = 1",
+                "tsql": "SELECT * FROM t WHERE a = 1",
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
