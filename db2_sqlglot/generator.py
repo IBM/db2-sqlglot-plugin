@@ -36,6 +36,8 @@ from sqlglot.dialects.dialect import (
     trim_sql,
 )
 
+from db2_sqlglot.parser import Db2PreviousValueFor
+
 
 def _add_sysibm_dual(expression: exp.Select) -> exp.Select:
     """
@@ -144,6 +146,7 @@ class Db2(generator.Generator):
         exp.TimeToStr: rename_func("VARCHAR_FORMAT"),
         exp.TryCast: no_trycast_sql,
         exp.Trim: trim_sql,
+        Db2PreviousValueFor: lambda self, e: f"PREVIOUS VALUE FOR {self.sql(e, 'this')}",
     }
 
     # Note: Db2-specific types (GRAPHIC, VARGRAPHIC, DBCLOB) are automatically

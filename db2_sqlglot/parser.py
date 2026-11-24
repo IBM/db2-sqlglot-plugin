@@ -23,8 +23,16 @@
 
 from __future__ import annotations
 
+import typing as t
+
 from sqlglot import exp, parser
 from sqlglot.helper import seq_get
+
+
+class Db2PreviousValueFor(exp.Expression):
+    """
+    PREVIOUS VALUE FOR sequence.
+    """
 
 
 class Db2Parser(parser.Parser):
@@ -50,3 +58,21 @@ class Db2Parser(parser.Parser):
         *parser.Parser.TYPE_TOKENS,
         # Db2-specific types will be parsed as DataType with the name preserved
     }
+
+    NO_PAREN_FUNCTION_PARSERS = {
+        **parser.Parser.NO_PAREN_FUNCTION_PARSERS,
+        "NEXT": lambda self: self._parse_sequence_reference(exp.NextValueFor),
+        "PREVIOUS": lambda self: self._parse_sequence_reference(Db2PreviousValueFor),
+    }
+
+    def _parse_sequence_reference(
+        self, expression_class: t.Type[exp.Expression]
+    ) -> t.Optional[exp.Expression]:
+        """
+        Parse NEXT VALUE FOR or PREVIOUS VALUE FOR a sequence. Without VALUE FOR, NEXT and
+        PREVIOUS are parsed as a function call or an identifier.
+        """
+        if not self._match_text_seq("VALUE", "FOR"):
+            self._retreat(self._index - 1)
+            return self._parse_function_call(optional_parens=False)
+        return self.expression(expression_class(this=self._parse_column()))

@@ -712,6 +712,17 @@ class TestDb2(Validator):
             read={"tsql": "SELECT JSON_OBJECT('key': val) FROM t"},
         )
 
+    def test_sequence_reference(self):
+        """Test NEXT VALUE FOR and PREVIOUS VALUE FOR sequence references"""
+        self.validate_identity("INSERT INTO t (id, a) VALUES (NEXT VALUE FOR s.seq, 'x')")
+        self.validate_identity("SELECT PREVIOUS VALUE FOR s.seq FROM SYSIBM.SYSDUMMY1")
+        self.validate_identity("SELECT next, previous FROM t")
+        self.validate_identity("SELECT NEXT(a), PREVIOUS(b) FROM t")
+        self.validate_all(
+            "INSERT INTO t (id, a) VALUES (NEXT VALUE FOR s.seq, 'x')",
+            write={"tsql": "INSERT INTO t (id, a) VALUES (NEXT VALUE FOR s.seq, 'x')"},
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
