@@ -712,6 +712,27 @@ class TestDb2(Validator):
             read={"tsql": "SELECT JSON_OBJECT('key': val) FROM t"},
         )
 
+    def test_default_without_value(self):
+        """Test WITH DEFAULT and DEFAULT without a value"""
+        self.validate_identity("CREATE TABLE t (a TIMESTAMP NOT NULL DEFAULT, b INTEGER)")
+        self.validate_identity("CREATE TABLE t (a INTEGER NOT NULL DEFAULT)")
+        self.validate_identity("ALTER TABLE t ADD COLUMN c INTEGER NOT NULL DEFAULT")
+        self.validate_all(
+            "CREATE TABLE t (a TIMESTAMP NOT NULL WITH DEFAULT, b INTEGER)",
+            write={"db2": "CREATE TABLE t (a TIMESTAMP NOT NULL DEFAULT, b INTEGER)"},
+        )
+        self.validate_all(
+            "CREATE TABLE t (a INTEGER NOT NULL WITH DEFAULT 0)",
+            write={
+                "db2": "CREATE TABLE t (a INTEGER NOT NULL DEFAULT 0)",
+                "mysql": "CREATE TABLE t (a INT NOT NULL DEFAULT 0)",
+                "postgres": "CREATE TABLE t (a INT NOT NULL DEFAULT 0)",
+                "snowflake": "CREATE TABLE t (a INT NOT NULL DEFAULT 0)",
+                "spark": "CREATE TABLE t (a INT NOT NULL DEFAULT 0)",
+                "tsql": "CREATE TABLE t (a INTEGER NOT NULL DEFAULT 0)",
+            },
+        )
+
 
 if __name__ == "__main__":
     unittest.main()
